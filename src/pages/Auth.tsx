@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Mail, 
   Lock, 
@@ -18,11 +20,88 @@ import {
   Facebook,
   ArrowLeft
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Auth = () => {
+  const { user, signUp, signIn, loading } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [userType, setUserType] = useState<"client" | "provider">("client");
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    phone: '',
+    location: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      navigate('/profile');
+    }
+  }, [user, navigate]);
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    const { error } = await signUp(formData.email, formData.password, {
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      phone: formData.phone,
+      location: formData.location,
+      user_type: userType
+    });
+
+    if (error) {
+      toast({
+        title: "Sign Up Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Account created successfully! Please check your email to confirm your account.",
+      });
+    }
+    setIsSubmitting(false);
+  };
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.email || !formData.password) {
+      toast({
+        title: "Error",
+        description: "Please enter your email and password",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    const { error } = await signIn(formData.email, formData.password);
+
+    if (error) {
+      toast({
+        title: "Sign In Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+    setIsSubmitting(false);
+  };
 
   const handleGoogleSignIn = () => {
     // Implement Google sign-in
@@ -132,7 +211,7 @@ const Auth = () => {
                 </TabsList>
 
                 <TabsContent value="login" className="space-y-4">
-                  <div className="space-y-4">
+                  <form onSubmit={handleSignIn} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="login-email">Email</Label>
                       <div className="relative">
@@ -142,6 +221,9 @@ const Auth = () => {
                           type="email"
                           placeholder="your@email.com"
                           className="pl-10"
+                          value={formData.email}
+                          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                          required
                         />
                       </div>
                     </div>
@@ -155,6 +237,9 @@ const Auth = () => {
                           type={showPassword ? "text" : "password"}
                           placeholder="Enter your password"
                           className="pl-10 pr-10"
+                          value={formData.password}
+                          onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                          required
                         />
                         <Button
                           type="button"
@@ -172,8 +257,12 @@ const Auth = () => {
                       </div>
                     </div>
 
-                    <Button className="w-full h-11 bg-gradient-primary">
-                      Sign In
+                    <Button 
+                      type="submit" 
+                      className="w-full h-11 bg-gradient-primary"
+                      disabled={isSubmitting || loading}
+                    >
+                      {isSubmitting ? 'Signing In...' : 'Sign In'}
                     </Button>
 
                     <div className="text-center">
@@ -181,17 +270,20 @@ const Auth = () => {
                         Forgot your password?
                       </Button>
                     </div>
-                  </div>
+                  </form>
                 </TabsContent>
 
                 <TabsContent value="register" className="space-y-4">
-                  <div className="space-y-4">
+                  <form onSubmit={handleSignUp} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="first-name">First Name</Label>
                         <Input
                           id="first-name"
                           placeholder="John"
+                          value={formData.firstName}
+                          onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                          required
                         />
                       </div>
                       <div className="space-y-2">
@@ -199,6 +291,9 @@ const Auth = () => {
                         <Input
                           id="last-name"
                           placeholder="Doe"
+                          value={formData.lastName}
+                          onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                          required
                         />
                       </div>
                     </div>
@@ -212,6 +307,9 @@ const Auth = () => {
                           type="email"
                           placeholder="your@email.com"
                           className="pl-10"
+                          value={formData.email}
+                          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                          required
                         />
                       </div>
                     </div>
@@ -225,6 +323,8 @@ const Auth = () => {
                           type="tel"
                           placeholder="+27 123 456 789"
                           className="pl-10"
+                          value={formData.phone}
+                          onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                         />
                       </div>
                     </div>
@@ -238,6 +338,8 @@ const Auth = () => {
                             id="location"
                             placeholder="Your city/area"
                             className="pl-10"
+                            value={formData.location}
+                            onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
                           />
                         </div>
                       </div>
@@ -252,6 +354,9 @@ const Auth = () => {
                           type={showPassword ? "text" : "password"}
                           placeholder="Create a password"
                           className="pl-10 pr-10"
+                          value={formData.password}
+                          onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                          required
                         />
                         <Button
                           type="button"
@@ -269,8 +374,12 @@ const Auth = () => {
                       </div>
                     </div>
 
-                    <Button className="w-full h-11 bg-gradient-primary">
-                      Create Account
+                    <Button 
+                      type="submit" 
+                      className="w-full h-11 bg-gradient-primary"
+                      disabled={isSubmitting || loading}
+                    >
+                      {isSubmitting ? 'Creating Account...' : 'Create Account'}
                     </Button>
 
                     <p className="text-xs text-muted-foreground text-center">
@@ -283,7 +392,7 @@ const Auth = () => {
                         Privacy Policy
                       </Button>
                     </p>
-                  </div>
+                  </form>
                 </TabsContent>
               </Tabs>
             </CardContent>

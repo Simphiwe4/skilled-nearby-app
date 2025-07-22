@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { 
   Home, 
   Search, 
@@ -10,11 +12,13 @@ import {
   Menu,
   X,
   Star,
-  MapPin
+  MapPin,
+  LogIn
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Navigation = () => {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
@@ -58,10 +62,25 @@ const Navigation = () => {
                 <span>{item.label}</span>
               </Link>
             ))}
-            <Button variant="default" size="sm" className="bg-gradient-primary">
-              <User className="h-4 w-4 mr-2" />
-              Sign In
-            </Button>
+            {user ? (
+              <Link to="/profile">
+                <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                  <Avatar className="h-6 w-6">
+                    <AvatarFallback className="text-xs">
+                      {user.email?.[0]?.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span>Profile</span>
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/auth">
+                <Button variant="default" size="sm" className="bg-gradient-primary">
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Sign In
+                </Button>
+              </Link>
+            )}
           </nav>
 
           {/* Mobile Menu Button */}
@@ -96,10 +115,25 @@ const Navigation = () => {
                 </Link>
               ))}
               <div className="pt-2 border-t">
-                <Button variant="default" size="sm" className="w-full bg-gradient-primary">
-                  <User className="h-4 w-4 mr-2" />
-                  Sign In
-                </Button>
+                {user ? (
+                  <Link to="/profile">
+                    <Button variant="ghost" size="sm" className="w-full">
+                      <Avatar className="h-4 w-4 mr-2">
+                        <AvatarFallback className="text-xs">
+                          {user.email?.[0]?.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      Profile
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link to="/auth">
+                    <Button variant="default" size="sm" className="w-full bg-gradient-primary">
+                      <LogIn className="h-4 w-4 mr-2" />
+                      Sign In
+                    </Button>
+                  </Link>
+                )}
               </div>
             </nav>
           </div>
