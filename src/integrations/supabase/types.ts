@@ -14,7 +14,313 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          client_id: string
+          client_notes: string | null
+          created_at: string
+          duration_minutes: number
+          id: string
+          listing_id: string
+          provider_id: string
+          provider_notes: string | null
+          scheduled_date: string
+          scheduled_time: string
+          status: Database["public"]["Enums"]["booking_status"] | null
+          total_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          client_notes?: string | null
+          created_at?: string
+          duration_minutes: number
+          id?: string
+          listing_id: string
+          provider_id: string
+          provider_notes?: string | null
+          scheduled_date: string
+          scheduled_time: string
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          total_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          client_notes?: string | null
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          listing_id?: string
+          provider_id?: string
+          provider_notes?: string | null
+          scheduled_date?: string
+          scheduled_time?: string
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          total_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "service_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          first_name: string
+          id: string
+          last_name: string
+          location: string | null
+          phone_number: string | null
+          updated_at: string
+          user_id: string
+          user_type: Database["public"]["Enums"]["user_type"]
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          first_name: string
+          id?: string
+          last_name: string
+          location?: string | null
+          phone_number?: string | null
+          updated_at?: string
+          user_id: string
+          user_type: Database["public"]["Enums"]["user_type"]
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          location?: string | null
+          phone_number?: string | null
+          updated_at?: string
+          user_id?: string
+          user_type?: Database["public"]["Enums"]["user_type"]
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          booking_id: string
+          comment: string | null
+          created_at: string
+          id: string
+          provider_id: string
+          rating: number
+          reviewer_id: string
+        }
+        Insert: {
+          booking_id: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          provider_id: string
+          rating: number
+          reviewer_id: string
+        }
+        Update: {
+          booking_id?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          provider_id?: string
+          rating?: number
+          reviewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon_name: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon_name?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon_name?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      service_listings: {
+        Row: {
+          category_id: string
+          created_at: string
+          description: string
+          duration_minutes: number | null
+          id: string
+          is_active: boolean | null
+          location: string | null
+          price: number | null
+          price_type: string | null
+          provider_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          description: string
+          duration_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          location?: string | null
+          price?: number | null
+          price_type?: string | null
+          provider_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          description?: string
+          duration_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          location?: string | null
+          price?: number | null
+          price_type?: string | null
+          provider_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_listings_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_listings_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_providers: {
+        Row: {
+          availability_hours: Json | null
+          business_name: string | null
+          created_at: string
+          description: string | null
+          experience_years: number | null
+          hourly_rate: number | null
+          id: string
+          portfolio_images: string[] | null
+          profile_id: string
+          service_radius: number | null
+          skills: string[] | null
+          updated_at: string
+          verification_status:
+            | Database["public"]["Enums"]["provider_status"]
+            | null
+        }
+        Insert: {
+          availability_hours?: Json | null
+          business_name?: string | null
+          created_at?: string
+          description?: string | null
+          experience_years?: number | null
+          hourly_rate?: number | null
+          id?: string
+          portfolio_images?: string[] | null
+          profile_id: string
+          service_radius?: number | null
+          skills?: string[] | null
+          updated_at?: string
+          verification_status?:
+            | Database["public"]["Enums"]["provider_status"]
+            | null
+        }
+        Update: {
+          availability_hours?: Json | null
+          business_name?: string | null
+          created_at?: string
+          description?: string | null
+          experience_years?: number | null
+          hourly_rate?: number | null
+          id?: string
+          portfolio_images?: string[] | null
+          profile_id?: string
+          service_radius?: number | null
+          skills?: string[] | null
+          updated_at?: string
+          verification_status?:
+            | Database["public"]["Enums"]["provider_status"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_providers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +329,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      booking_status: "pending" | "confirmed" | "completed" | "cancelled"
+      provider_status: "pending" | "approved" | "suspended"
+      user_type: "client" | "provider"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +458,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      booking_status: ["pending", "confirmed", "completed", "cancelled"],
+      provider_status: ["pending", "approved", "suspended"],
+      user_type: ["client", "provider"],
+    },
   },
 } as const
