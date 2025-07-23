@@ -3,6 +3,7 @@ import HeroSection from "@/components/hero-section";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { 
   Star, 
   Shield, 
@@ -194,11 +195,11 @@ const Index = () => {
               Join thousands of South Africans who are already connecting with skilled professionals in their area.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" variant="secondary" className="h-12 px-8">
-                Find Services
+              <Button size="lg" variant="secondary" className="h-12 px-8" asChild>
+                <Link to="/search">Find Services</Link>
               </Button>
-              <Button size="lg" variant="outline" className="h-12 px-8 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-                Become a Provider
+              <Button size="lg" variant="outline" className="h-12 px-8 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground hover:text-primary" asChild>
+                <Link to="/auth">Become a Provider</Link>
               </Button>
             </div>
           </div>

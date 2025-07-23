@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ import {
 import heroImage from "@/assets/hero-image.jpg";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
   const [location, setLocation] = useState("");
   const [service, setService] = useState("");
 
@@ -32,8 +34,11 @@ const HeroSection = () => {
   ];
 
   const handleSearch = () => {
-    // Navigate to search results
-    console.log("Searching for:", service, "in", location);
+    navigate(`/search?service=${encodeURIComponent(service)}&location=${encodeURIComponent(location)}`);
+  };
+
+  const handleServiceClick = (serviceName: string) => {
+    navigate(`/search?service=${encodeURIComponent(serviceName)}`);
   };
 
   return (
@@ -113,6 +118,7 @@ const HeroSection = () => {
                     variant="secondary"
                     size="sm"
                     className="h-auto py-2 px-3 hover:scale-105 transition-transform"
+                    onClick={() => handleServiceClick(service.name)}
                   >
                     <service.icon className="h-3 w-3 mr-2" />
                     {service.name}
