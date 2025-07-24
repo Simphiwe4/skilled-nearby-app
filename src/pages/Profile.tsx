@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import ServiceListingForm from "@/components/ServiceListingForm";
 import { 
   User, 
   MapPin, 
@@ -270,10 +271,13 @@ const Profile = () => {
 
             <CardContent>
               <Tabs defaultValue="personal" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="personal">Personal Info</TabsTrigger>
                   {profile.user_type === 'provider' && (
                     <TabsTrigger value="business">Business Info</TabsTrigger>
+                  )}
+                  {profile.user_type === 'provider' && (
+                    <TabsTrigger value="services">My Services</TabsTrigger>
                   )}
                   <TabsTrigger value="bookings">My Bookings</TabsTrigger>
                 </TabsList>
@@ -467,6 +471,12 @@ const Profile = () => {
                         )}
                       </div>
                     </div>
+                  </TabsContent>
+                )}
+
+                {profile.user_type === 'provider' && serviceProvider && (
+                  <TabsContent value="services" className="space-y-6">
+                    <ServiceListingForm providerId={serviceProvider.id} />
                   </TabsContent>
                 )}
 

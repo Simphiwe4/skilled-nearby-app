@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Search as SearchIcon, 
   MapPin, 
@@ -16,66 +18,101 @@ import {
 } from "lucide-react";
 import Navigation from "@/components/ui/navigation";
 
+interface ServiceListing {
+  id: string;
+  title: string;
+  description: string;
+  price?: number;
+  price_type: string;
+  duration_minutes?: number;
+  is_active: boolean;
+  provider_id: string;
+  category_id: string;
+  service_categories: {
+    name: string;
+  };
+  service_providers: {
+    id: string;
+    business_name?: string;
+    skills?: string[];
+    verification_status: string;
+    profiles: {
+      first_name: string;
+      last_name: string;
+      phone_number?: string;
+      location?: string;
+      avatar_url?: string;
+    };
+  };
+}
+
 const Search = () => {
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [listings, setListings] = useState<ServiceListing[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data for service providers
-  const providers = [
-    {
-      id: 1,
-      name: "Thabo Mthembu",
-      service: "Handyman",
-      rating: 4.9,
-      reviews: 127,
-      distance: "2.3 km",
-      price: "R150/hour",
-      avatar: "/api/placeholder/150/150",
-      skills: ["Plumbing", "Electrical", "Carpentry"],
-      verified: true,
-      description: "Experienced handyman with 8+ years in home repairs."
-    },
-    {
-      id: 2,
-      name: "Nomsa Dlamini",
-      service: "Hair Stylist",
-      rating: 4.8,
-      reviews: 89,
-      distance: "1.7 km",
-      price: "R80/session",
-      avatar: "/api/placeholder/150/150",
-      skills: ["Braids", "Natural Hair", "Color"],
-      verified: true,
-      description: "Professional stylist specializing in natural African hair."
-    },
-    {
-      id: 3,
-      name: "Sipho Nkomo",
-      service: "Tutor",
-      rating: 4.7,
-      reviews: 64,
-      distance: "3.1 km",
-      price: "R120/hour",
-      avatar: "/api/placeholder/150/150",
-      skills: ["Maths", "Science", "English"],
-      verified: true,
-      description: "Mathematics teacher with experience in all grade levels."
-    },
-    {
-      id: 4,
-      name: "Lerato Molefe",
-      service: "Cleaner",
-      rating: 4.9,
-      reviews: 156,
-      distance: "1.2 km",
-      price: "R200/session",
-      avatar: "/api/placeholder/150/150",
-      skills: ["Deep Clean", "Office", "Residential"],
-      verified: true,
-      description: "Reliable cleaning service for homes and offices."
+  useEffect(() => {
+    fetchListings();
+  }, []);
+
+  const fetchListings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('service_listings')
+        .select(`
+          *,
+          service_categories (
+            name
+          ),
+          service_providers (
+            id,
+            business_name,
+            skills,
+            verification_status,
+            profiles (
+              first_name,
+              last_name,
+              phone_number,
+              location,
+              avatar_url
+            )
+          )
+        `)
+        .eq('is_active', true)
+        .eq('service_providers.verification_status', 'approved')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setListings(data || []);
+    } catch (error) {
+      console.error('Error fetching listings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load service listings",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  const filteredListings = listings.filter(listing => {
+    const matchesSearch = !searchQuery || 
+      listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      listing.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      listing.service_categories.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      listing.service_providers.skills?.some(skill => 
+        skill.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    
+    const matchesLocation = !location || 
+      listing.service_providers.profiles.location?.toLowerCase().includes(location.toLowerCase());
+
+    return matchesSearch && matchesLocation;
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -176,89 +213,117 @@ const Search = () => {
           {/* Results */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-muted-foreground">Found {providers.length} service providers</p>
+              <p className="text-muted-foreground">
+                {loading ? 'Loading...' : `Found ${filteredListings.length} service listings`}
+              </p>
               <Button variant="outline" size="sm">
                 <Filter className="h-4 w-4 mr-2" />
                 Sort by
               </Button>
             </div>
 
-            {/* Provider Cards */}
+            {/* Listing Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {providers.map((provider) => (
-                <Card key={provider.id} className="hover:shadow-elevated transition-shadow cursor-pointer">
-                  <CardContent className="p-6">
-                    <div className="space-y-4">
-                      {/* Header */}
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={provider.avatar} alt={provider.name} />
-                            <AvatarFallback>{provider.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="flex items-center space-x-2">
-                              <h3 className="font-semibold">{provider.name}</h3>
-                              {provider.verified && (
-                                <Badge variant="secondary" className="text-xs">
-                                  Verified
-                                </Badge>
-                              )}
+              {loading ? (
+                <div className="col-span-full text-center py-8 text-muted-foreground">
+                  Loading services...
+                </div>
+              ) : filteredListings.length === 0 ? (
+                <div className="col-span-full text-center py-8 text-muted-foreground">
+                  No services found. Try adjusting your search criteria.
+                </div>
+              ) : (
+                filteredListings.map((listing) => (
+                  <Card key={listing.id} className="hover:shadow-elevated transition-shadow cursor-pointer">
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        {/* Header */}
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-12 w-12">
+                              <AvatarImage src={listing.service_providers.profiles.avatar_url} />
+                              <AvatarFallback>
+                                {listing.service_providers.profiles.first_name[0]}
+                                {listing.service_providers.profiles.last_name[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="flex items-center space-x-2">
+                                <h3 className="font-semibold">
+                                  {listing.service_providers.profiles.first_name} {listing.service_providers.profiles.last_name}
+                                </h3>
+                                {listing.service_providers.verification_status === 'approved' && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    Verified
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-muted-foreground">{listing.title}</p>
                             </div>
-                            <p className="text-sm text-muted-foreground">{provider.service}</p>
+                          </div>
+                          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
+                            <Heart className="h-4 w-4" />
+                          </Button>
+                        </div>
+
+                        {/* Category and Location */}
+                        <div className="flex items-center space-x-4">
+                          <Badge variant="outline" className="text-xs">
+                            {listing.service_categories.name}
+                          </Badge>
+                          {listing.service_providers.profiles.location && (
+                            <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                              <MapPin className="h-3 w-3" />
+                              <span>{listing.service_providers.profiles.location}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Skills */}
+                        {listing.service_providers.skills && (
+                          <div className="flex flex-wrap gap-1">
+                            {listing.service_providers.skills.map((skill, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Description */}
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {listing.description}
+                        </p>
+
+                        {/* Price and Actions */}
+                        <div className="flex items-center justify-between pt-2 border-t">
+                          <span className="font-semibold text-primary">
+                            {listing.price ? (
+                              `R${listing.price}${listing.price_type === 'hourly' ? '/hour' : 
+                                listing.price_type === 'daily' ? '/day' : ''}`
+                            ) : (
+                              'Price on request'
+                            )}
+                          </span>
+                          <div className="flex space-x-2">
+                            <Button variant="outline" size="sm">
+                              <MessageCircle className="h-4 w-4" />
+                            </Button>
+                            {listing.service_providers.profiles.phone_number && (
+                              <Button variant="outline" size="sm">
+                                <Phone className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <Button size="sm" className="bg-gradient-primary">
+                              Book Now
+                            </Button>
                           </div>
                         </div>
-                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
-                          <Heart className="h-4 w-4" />
-                        </Button>
                       </div>
-
-                      {/* Rating */}
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-1">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-medium">{provider.rating}</span>
-                          <span className="text-sm text-muted-foreground">({provider.reviews})</span>
-                        </div>
-                        <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                          <MapPin className="h-3 w-3" />
-                          <span>{provider.distance}</span>
-                        </div>
-                      </div>
-
-                      {/* Skills */}
-                      <div className="flex flex-wrap gap-1">
-                        {provider.skills.map((skill) => (
-                          <Badge key={skill} variant="outline" className="text-xs">
-                            {skill}
-                          </Badge>
-                        ))}
-                      </div>
-
-                      {/* Description */}
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {provider.description}
-                      </p>
-
-                      {/* Price and Actions */}
-                      <div className="flex items-center justify-between pt-2 border-t">
-                        <span className="font-semibold text-primary">{provider.price}</span>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">
-                            <MessageCircle className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Phone className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" className="bg-gradient-primary">
-                            Book Now
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
         </div>
