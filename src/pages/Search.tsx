@@ -60,19 +60,22 @@ const Search = () => {
 
   const fetchListings = async () => {
     try {
+      console.log('Fetching service listings...');
+      
+      // First, let's simplify the query to avoid potential join issues
       const { data, error } = await supabase
         .from('service_listings')
         .select(`
           *,
-          service_categories (
+          service_categories!inner (
             name
           ),
-          service_providers (
+          service_providers!inner (
             id,
             business_name,
             skills,
             verification_status,
-            profiles (
+            profiles!inner (
               first_name,
               last_name,
               phone_number,
@@ -82,24 +85,42 @@ const Search = () => {
           )
         `)
         .eq('is_active', true)
-        .eq('service_providers.verification_status', 'approved')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setListings(data || []);
+      console.log('Query result:', { data, error });
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      // Filter approved providers after fetching
+      const approvedListings = (data || []).filter(
+        listing => listing.service_providers?.verification_status === 'approved'
+      );
+
+      console.log('Approved listings:', approvedListings);
+      setListings(approvedListings);
     } catch (error) {
       console.error('Error fetching listings:', error);
       toast({
-        title: "Error",
+        title: "Error", 
         description: "Failed to load service listings",
         variant: "destructive"
       });
+      // Set empty array to prevent filtering errors
+      setListings([]);
     } finally {
       setLoading(false);
     }
   };
 
   const filteredListings = listings.filter(listing => {
+    // Add safety checks to prevent errors
+    if (!listing.service_categories || !listing.service_providers?.profiles) {
+      return false;
+    }
+
     const matchesSearch = !searchQuery || 
       listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       listing.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
