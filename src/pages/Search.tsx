@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import BookingModal from "@/components/BookingModal";
 import { 
   Search as SearchIcon, 
   MapPin, 
@@ -53,6 +54,8 @@ const Search = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [listings, setListings] = useState<ServiceListing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedListing, setSelectedListing] = useState<ServiceListing | null>(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   useEffect(() => {
     fetchListings();
@@ -335,7 +338,14 @@ const Search = () => {
                                 <Phone className="h-4 w-4" />
                               </Button>
                             )}
-                            <Button size="sm" className="bg-gradient-primary">
+                            <Button 
+                              size="sm" 
+                              className="bg-gradient-primary"
+                              onClick={() => {
+                                setSelectedListing(listing);
+                                setIsBookingModalOpen(true);
+                              }}
+                            >
                               Book Now
                             </Button>
                           </div>
@@ -349,6 +359,18 @@ const Search = () => {
           </div>
         </div>
       </div>
+
+      {/* Booking Modal */}
+      {selectedListing && (
+        <BookingModal
+          isOpen={isBookingModalOpen}
+          onClose={() => {
+            setIsBookingModalOpen(false);
+            setSelectedListing(null);
+          }}
+          listing={selectedListing}
+        />
+      )}
     </div>
   );
 };

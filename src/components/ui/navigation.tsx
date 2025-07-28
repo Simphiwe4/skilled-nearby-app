@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Home, 
   Search, 
@@ -13,21 +14,64 @@ import {
   X,
   Star,
   MapPin,
-  LogIn
+  LogIn,
+  Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Navigation = () => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [userType, setUserType] = useState<string>("");
   const location = useLocation();
 
-  const navItems = [
-    { href: "/", label: "Home", icon: Home },
-    { href: "/search", label: "Find Services", icon: Search },
-    { href: "/bookings", label: "Bookings", icon: Calendar },
-    { href: "/profile", label: "Profile", icon: User },
-  ];
+  useEffect(() => {
+    if (user) {
+      getUserType();
+    }
+  }, [user]);
+
+  const getUserType = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) throw error;
+      setUserType(data.user_type);
+    } catch (error) {
+      console.error('Error fetching user type:', error);
+    }
+  };
+
+  const getNavItems = () => {
+    const baseItems = [
+      { href: "/", label: "Home", icon: Home },
+      { href: "/search", label: "Find Services", icon: Search },
+    ];
+
+    if (user) {
+      if (userType === 'provider') {
+        baseItems.push(
+          { href: "/provider-dashboard", label: "Dashboard", icon: Settings },
+          { href: "/profile", label: "Profile", icon: User }
+        );
+      } else {
+        baseItems.push(
+          { href: "/client-dashboard", label: "My Bookings", icon: Calendar },
+          { href: "/profile", label: "Profile", icon: User }
+        );
+      }
+    }
+
+    return baseItems;
+  };
+
+  const navItems = getNavItems();
 
   const isActive = (path: string) => location.pathname === path;
 

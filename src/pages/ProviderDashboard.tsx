@@ -358,10 +358,7 @@ const ProviderDashboard = () => {
 
                           {/* Actions */}
                           <div className="flex flex-wrap gap-2 pt-2 border-t">
-                            <Button variant="outline" size="sm">
-                              <MessageCircle className="h-4 w-4 mr-2" />
-                              Message
-                            </Button>
+                            {/* TODO: Add messaging functionality */}
                             {booking.profiles.phone_number && (
                               <Button variant="outline" size="sm">
                                 <Phone className="h-4 w-4 mr-2" />
