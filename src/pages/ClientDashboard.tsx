@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import ReviewModal from "@/components/ReviewModal";
 import Navigation from "@/components/ui/navigation";
 import { 
   Calendar, 
@@ -39,6 +40,7 @@ interface Booking {
     };
   };
   service_providers: {
+    id: string;
     business_name?: string;
     profiles: {
       first_name: string;
@@ -56,6 +58,8 @@ const ClientDashboard = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
+  const [selectedBookingForReview, setSelectedBookingForReview] = useState<Booking | null>(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -89,6 +93,7 @@ const ClientDashboard = () => {
             )
           ),
           service_providers!inner (
+            id,
             business_name,
             profiles!inner (
               first_name,
@@ -324,7 +329,14 @@ const ClientDashboard = () => {
                               </Button>
                             )}
                             {booking.status === 'completed' && (
-                              <Button variant="outline" size="sm">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedBookingForReview(booking);
+                                  setIsReviewModalOpen(true);
+                                }}
+                              >
                                 <Star className="h-4 w-4 mr-2" />
                                 Review
                               </Button>
@@ -340,6 +352,25 @@ const ClientDashboard = () => {
           </Tabs>
         </div>
       </div>
+
+      {/* Review Modal */}
+      {selectedBookingForReview && (
+        <ReviewModal
+          isOpen={isReviewModalOpen}
+          onClose={() => {
+            setIsReviewModalOpen(false);
+            setSelectedBookingForReview(null);
+          }}
+          bookingId={selectedBookingForReview.id}
+          providerId={selectedBookingForReview.service_providers.id}
+          providerName={`${selectedBookingForReview.service_providers.profiles.first_name} ${selectedBookingForReview.service_providers.profiles.last_name}`}
+          serviceName={selectedBookingForReview.service_listings.title}
+          onReviewSubmitted={() => {
+            // Optionally refresh bookings or show success message
+            fetchBookings();
+          }}
+        />
+      )}
     </div>
   );
 };

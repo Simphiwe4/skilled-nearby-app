@@ -175,6 +175,47 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_availability: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          is_available: boolean
+          provider_id: string
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_available?: boolean
+          provider_id: string
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_available?: boolean
+          provider_id?: string
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_availability_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           booking_id: string
@@ -314,6 +355,7 @@ export type Database = {
       service_providers: {
         Row: {
           availability_hours: Json | null
+          average_rating: number | null
           business_name: string | null
           created_at: string
           description: string | null
@@ -324,6 +366,7 @@ export type Database = {
           profile_id: string
           service_radius: number | null
           skills: string[] | null
+          total_reviews: number | null
           updated_at: string
           verification_status:
             | Database["public"]["Enums"]["provider_status"]
@@ -331,6 +374,7 @@ export type Database = {
         }
         Insert: {
           availability_hours?: Json | null
+          average_rating?: number | null
           business_name?: string | null
           created_at?: string
           description?: string | null
@@ -341,6 +385,7 @@ export type Database = {
           profile_id: string
           service_radius?: number | null
           skills?: string[] | null
+          total_reviews?: number | null
           updated_at?: string
           verification_status?:
             | Database["public"]["Enums"]["provider_status"]
@@ -348,6 +393,7 @@ export type Database = {
         }
         Update: {
           availability_hours?: Json | null
+          average_rating?: number | null
           business_name?: string | null
           created_at?: string
           description?: string | null
@@ -358,6 +404,7 @@ export type Database = {
           profile_id?: string
           service_radius?: number | null
           skills?: string[] | null
+          total_reviews?: number | null
           updated_at?: string
           verification_status?:
             | Database["public"]["Enums"]["provider_status"]

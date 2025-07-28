@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import Navigation from "@/components/ui/navigation";
 import ServiceListingForm from "@/components/ServiceListingForm";
+import AvailabilityManager from "@/components/AvailabilityManager";
+import ReviewsList from "@/components/ReviewsList";
 import { 
   Calendar, 
   Clock, 
@@ -61,6 +63,7 @@ const ProviderDashboard = () => {
   const [providerId, setProviderId] = useState<string>("");
   const [selectedBooking, setSelectedBooking] = useState<string>("");
   const [providerNotes, setProviderNotes] = useState("");
+  const [isAvailabilityModalOpen, setIsAvailabilityModalOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -257,9 +260,11 @@ const ProviderDashboard = () => {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="bookings">Manage Bookings</TabsTrigger>
-              <TabsTrigger value="services">Manage Services</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="bookings">Bookings</TabsTrigger>
+              <TabsTrigger value="services">Services</TabsTrigger>
+              <TabsTrigger value="availability">Availability</TabsTrigger>
+              <TabsTrigger value="reviews">Reviews</TabsTrigger>
             </TabsList>
 
             <TabsContent value="bookings" className="space-y-4">
@@ -433,9 +438,41 @@ const ProviderDashboard = () => {
                 />
               )}
             </TabsContent>
+
+            <TabsContent value="availability">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold">Manage Your Availability</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Set your weekly schedule so clients know when you're available to book.
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => setIsAvailabilityModalOpen(true)}
+                    className="bg-gradient-primary"
+                  >
+                    Update Schedule
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="reviews">
+              {providerId && <ReviewsList providerId={providerId} />}
+            </TabsContent>
           </Tabs>
         </div>
       </div>
+
+      {/* Availability Manager Modal */}
+      {providerId && (
+        <AvailabilityManager
+          isOpen={isAvailabilityModalOpen}
+          onClose={() => setIsAvailabilityModalOpen(false)}
+          providerId={providerId}
+        />
+      )}
     </div>
   );
 };

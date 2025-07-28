@@ -7,6 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import BookingModal from "@/components/BookingModal";
+import AdvancedSearchFilters from "@/components/AdvancedSearchFilters";
+import RatingDisplay from "@/components/RatingDisplay";
 import { 
   Search as SearchIcon, 
   MapPin, 
@@ -37,6 +39,8 @@ interface ServiceListing {
     business_name?: string;
     skills?: string[];
     verification_status: string;
+    average_rating: number;
+    total_reviews: number;
     profiles: {
       first_name: string;
       last_name: string;
@@ -53,20 +57,43 @@ const Search = () => {
   const [location, setLocation] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [listings, setListings] = useState<ServiceListing[]>([]);
+  const [categories, setCategories] = useState<Array<{id: string; name: string}>>([]);
   const [loading, setLoading] = useState(true);
   const [selectedListing, setSelectedListing] = useState<ServiceListing | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    priceRange: [0, 1000] as [number, number],
+    rating: "",
+    category: "",
+    distance: "",
+    availability: "",
+    sortBy: "newest"
+  });
 
   useEffect(() => {
     fetchListings();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('service_categories')
+        .select('id, name')
+        .order('name');
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
 
   const fetchListings = async () => {
     try {
       console.log('Fetching service listings...');
       
-      // First, let's simplify the query to avoid potential join issues
-      const { data, error } = await supabase
+      let query = supabase
         .from('service_listings')
         .select(`
           *,
@@ -78,6 +105,8 @@ const Search = () => {
             business_name,
             skills,
             verification_status,
+            average_rating,
+            total_reviews,
             profiles!inner (
               first_name,
               last_name,
@@ -87,8 +116,39 @@ const Search = () => {
             )
           )
         `)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        .eq('is_active', true);
+      // Apply filters
+      if (filters.category) {
+        query = query.eq('category_id', filters.category);
+      }
+
+      if (filters.rating) {
+        query = query.gte('service_providers.average_rating', parseFloat(filters.rating));
+      }
+
+      if (filters.priceRange[0] > 0 || filters.priceRange[1] < 1000) {
+        query = query.gte('price', filters.priceRange[0]).lte('price', filters.priceRange[1]);
+      }
+
+      // Apply sorting
+      switch (filters.sortBy) {
+        case 'rating':
+          query = query.order('service_providers.average_rating', { ascending: false });
+          break;
+        case 'price_low':
+          query = query.order('price', { ascending: true });
+          break;
+        case 'price_high':
+          query = query.order('price', { ascending: false });
+          break;
+        case 'reviews':
+          query = query.order('service_providers.total_reviews', { ascending: false });
+          break;
+        default:
+          query = query.order('created_at', { ascending: false });
+      }
+
+      const { data, error } = await query;
 
       console.log('Query result:', { data, error });
 
@@ -111,12 +171,16 @@ const Search = () => {
         description: "Failed to load service listings",
         variant: "destructive"
       });
-      // Set empty array to prevent filtering errors
       setListings([]);
     } finally {
       setLoading(false);
     }
   };
+
+  // Refetch when filters change
+  useEffect(() => {
+    fetchListings();
+  }, [filters]);
 
   const filteredListings = listings.filter(listing => {
     // Add safety checks to prevent errors
@@ -187,49 +251,14 @@ const Search = () => {
                   </div>
                 </div>
                 
-                {/* Filters */}
-                {showFilters && (
-                  <div className="mt-4 pt-4 border-t space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">Price Range</label>
-                        <select className="w-full p-2 border rounded-md">
-                          <option>Any price</option>
-                          <option>Under R100</option>
-                          <option>R100 - R200</option>
-                          <option>R200+</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">Distance</label>
-                        <select className="w-full p-2 border rounded-md">
-                          <option>Any distance</option>
-                          <option>Under 1km</option>
-                          <option>1-5km</option>
-                          <option>5km+</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">Rating</label>
-                        <select className="w-full p-2 border rounded-md">
-                          <option>Any rating</option>
-                          <option>4.5+ stars</option>
-                          <option>4+ stars</option>
-                          <option>3+ stars</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">Availability</label>
-                        <select className="w-full p-2 border rounded-md">
-                          <option>Any time</option>
-                          <option>Available now</option>
-                          <option>Today</option>
-                          <option>This week</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {/* Advanced Filters */}
+                <AdvancedSearchFilters
+                  isOpen={showFilters}
+                  onClose={() => setShowFilters(false)}
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                  categories={categories}
+                />
               </CardContent>
             </Card>
           </div>
@@ -240,10 +269,6 @@ const Search = () => {
               <p className="text-muted-foreground">
                 {loading ? 'Loading...' : `Found ${filteredListings.length} service listings`}
               </p>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Sort by
-              </Button>
             </div>
 
             {/* Listing Cards */}
@@ -290,18 +315,25 @@ const Search = () => {
                           </Button>
                         </div>
 
-                        {/* Category and Location */}
-                        <div className="flex items-center space-x-4">
-                          <Badge variant="outline" className="text-xs">
-                            {listing.service_categories.name}
-                          </Badge>
-                          {listing.service_providers.profiles.location && (
-                            <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                              <MapPin className="h-3 w-3" />
-                              <span>{listing.service_providers.profiles.location}</span>
+                          {/* Category and Location */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <Badge variant="outline" className="text-xs">
+                                {listing.service_categories.name}
+                              </Badge>
+                              {listing.service_providers.profiles.location && (
+                                <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                                  <MapPin className="h-3 w-3" />
+                                  <span>{listing.service_providers.profiles.location}</span>
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
+                            <RatingDisplay 
+                              rating={listing.service_providers.average_rating || 0}
+                              totalReviews={listing.service_providers.total_reviews || 0}
+                              size="sm"
+                            />
+                          </div>
 
                         {/* Skills */}
                         {listing.service_providers.skills && (
