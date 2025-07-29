@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import BookingModal from "@/components/BookingModal";
 import AdvancedSearchFilters from "@/components/AdvancedSearchFilters";
 import RatingDisplay from "@/components/RatingDisplay";
+import ReviewsViewModal from "@/components/ReviewsViewModal";
 import { 
   Search as SearchIcon, 
   MapPin, 
@@ -62,6 +63,9 @@ const Search = () => {
   const [selectedListing, setSelectedListing] = useState<ServiceListing | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [reviews, setReviews] = useState<Record<string, any[]>>({});
+  const [selectedReviews, setSelectedReviews] = useState<any[]>([]);
+  const [isReviewsModalOpen, setIsReviewsModalOpen] = useState(false);
+  const [selectedProviderName, setSelectedProviderName] = useState("");
   const [filters, setFilters] = useState({
     priceRange: [0, 1000] as [number, number],
     rating: "",
@@ -364,6 +368,11 @@ const Search = () => {
                               rating={listing.service_providers.average_rating || 0}
                               totalReviews={reviews[listing.service_providers.id]?.length || 0}
                               size="sm"
+                              onClick={reviews[listing.service_providers.id]?.length > 0 ? () => {
+                                setSelectedReviews(reviews[listing.service_providers.id] || []);
+                                setSelectedProviderName(`${listing.service_providers.profiles.first_name} ${listing.service_providers.profiles.last_name}`);
+                                setIsReviewsModalOpen(true);
+                              } : undefined}
                             />
                           </div>
 
@@ -435,6 +444,21 @@ const Search = () => {
           listing={selectedListing}
         />
       )}
+
+      {/* Reviews Modal */}
+      <ReviewsViewModal
+        isOpen={isReviewsModalOpen}
+        onClose={() => {
+          setIsReviewsModalOpen(false);
+          setSelectedReviews([]);
+          setSelectedProviderName("");
+        }}
+        reviews={selectedReviews}
+        providerName={selectedProviderName}
+        averageRating={selectedReviews.length > 0 ? 
+          selectedReviews.reduce((sum, review) => sum + review.rating, 0) / selectedReviews.length : 0
+        }
+      />
     </div>
   );
 };

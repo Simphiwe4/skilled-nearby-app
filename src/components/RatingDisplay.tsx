@@ -5,13 +5,17 @@ interface RatingDisplayProps {
   totalReviews?: number;
   size?: "sm" | "md" | "lg";
   showText?: boolean;
+  onClick?: () => void;
+  className?: string;
 }
 
 const RatingDisplay = ({ 
   rating, 
   totalReviews, 
   size = "md", 
-  showText = true 
+  showText = true,
+  onClick,
+  className = ""
 }: RatingDisplayProps) => {
   const sizeClasses = {
     sm: "w-3 h-3",
@@ -74,8 +78,16 @@ const RatingDisplay = ({
     );
   }
 
+  const Component = onClick ? "button" : "div";
+  const clickableProps = onClick ? {
+    onClick,
+    className: `${className} hover:opacity-80 transition-opacity cursor-pointer`
+  } : {
+    className
+  };
+
   return (
-    <div className="flex items-center space-x-2">
+    <Component {...clickableProps} className={`flex items-center space-x-2 ${clickableProps.className}`}>
       <div className="flex items-center space-x-1">
         {renderStars()}
       </div>
@@ -85,13 +97,13 @@ const RatingDisplay = ({
             {rating.toFixed(1)}
           </span>
           {totalReviews !== undefined && (
-            <span className={`${textSizeClasses[size]} text-muted-foreground`}>
+            <span className={`${textSizeClasses[size]} text-muted-foreground ${onClick ? 'underline' : ''}`}>
               ({totalReviews} review{totalReviews !== 1 ? 's' : ''})
             </span>
           )}
         </div>
       )}
-    </div>
+    </Component>
   );
 };
 
