@@ -48,16 +48,6 @@ serve(async (req) => {
         service_listings!inner (
           title,
           description
-        ),
-        client_profile:profiles!bookings_client_id_fkey (
-          first_name,
-          last_name,
-          user_id
-        ),
-        provider_profile:profiles!bookings_provider_id_fkey (
-          first_name,
-          last_name,
-          user_id
         )
       `)
       .eq('id', bookingId)
@@ -68,19 +58,47 @@ serve(async (req) => {
       throw new Error('Failed to fetch booking details');
     }
 
+    // Fetch client and provider profiles separately
+    const { data: clientProfile, error: clientError } = await supabase
+      .from('profiles')
+      .select('first_name, last_name, user_id')
+      .eq('id', booking.client_id)
+      .single();
+
+    const { data: providerProfile, error: providerError } = await supabase
+      .from('service_providers')
+      .select(`
+        profiles!inner (
+          first_name,
+          last_name,
+          user_id
+        )
+      `)
+      .eq('id', booking.provider_id)
+      .single();
+
+    if (clientError || providerError) {
+      console.error('Error fetching profiles:', { clientError, providerError });
+      throw new Error('Failed to fetch profile details');
+    }
+
+    // Add profiles to booking object
+    booking.client_profile = clientProfile;
+    booking.provider_profile = providerProfile.profiles;
+
     console.log('Booking details fetched:', booking);
 
     // Get email addresses from auth.users
-    const { data: clientUser, error: clientError } = await supabase.auth.admin.getUserById(
+    const { data: clientUser, error: clientUserError } = await supabase.auth.admin.getUserById(
       booking.client_profile.user_id
     );
     
-    const { data: providerUser, error: providerError } = await supabase.auth.admin.getUserById(
+    const { data: providerUser, error: providerUserError } = await supabase.auth.admin.getUserById(
       booking.provider_profile.user_id
     );
 
-    if (clientError || providerError) {
-      console.error('Error fetching user emails:', { clientError, providerError });
+    if (clientUserError || providerUserError) {
+      console.error('Error fetching user emails:', { clientUserError, providerUserError });
       throw new Error('Failed to fetch user email addresses');
     }
 

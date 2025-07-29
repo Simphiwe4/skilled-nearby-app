@@ -60,7 +60,7 @@ const RatingDisplay = ({
       stars.push(
         <Star
           key={`empty-${i}`}
-          className={`${sizeClasses[size]} text-gray-300`}
+          className={`${sizeClasses[size]} text-gray-300 dark:text-gray-600`}
         />
       );
     }
@@ -68,9 +68,9 @@ const RatingDisplay = ({
     return stars;
   };
 
-  if (rating === 0 && !totalReviews) {
+  if (rating === 0) {
     return (
-      <div className="flex items-center space-x-1">
+      <div className={`flex items-center space-x-1 ${className}`}>
         <span className={`${textSizeClasses[size]} text-muted-foreground`}>
           No reviews yet
         </span>
