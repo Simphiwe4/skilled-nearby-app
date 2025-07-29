@@ -124,14 +124,14 @@ const Auth = () => {
               Back to Home
             </Button>
           </Link>
-          <div className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
               <MapPin className="h-5 w-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold text-primary-foreground">
               Skilled Nearby
             </span>
-          </div>
+          </Link>
         </div>
       </div>
 

@@ -107,6 +107,19 @@ const BookingModal = ({ isOpen, onClose, listing }: BookingModalProps) => {
 
       if (error) throw error;
 
+      // Send booking notification email
+      try {
+        await supabase.functions.invoke('send-booking-notification', {
+          body: {
+            bookingId: data[0].id,
+            type: 'booking_request'
+          }
+        });
+      } catch (emailError) {
+        console.error('Email notification failed:', emailError);
+        // Don't fail the booking if email fails
+      }
+
       toast({
         title: "Booking Submitted!",
         description: "Your booking request has been sent to the provider",

@@ -61,6 +61,7 @@ const Search = () => {
   const [loading, setLoading] = useState(true);
   const [selectedListing, setSelectedListing] = useState<ServiceListing | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [reviews, setReviews] = useState<Record<string, any[]>>({});
   const [filters, setFilters] = useState({
     priceRange: [0, 1000] as [number, number],
     rating: "",
@@ -73,6 +74,7 @@ const Search = () => {
   useEffect(() => {
     fetchListings();
     fetchCategories();
+    fetchReviews();
   }, []);
 
   const fetchCategories = async () => {
@@ -86,6 +88,36 @@ const Search = () => {
       setCategories(data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
+    }
+  };
+
+  const fetchReviews = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select(`
+          *,
+          profiles!reviews_reviewer_id_fkey (
+            first_name,
+            last_name
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      // Group reviews by provider_id
+      const reviewsByProvider: Record<string, any[]> = {};
+      (data || []).forEach((review) => {
+        if (!reviewsByProvider[review.provider_id]) {
+          reviewsByProvider[review.provider_id] = [];
+        }
+        reviewsByProvider[review.provider_id].push(review);
+      });
+      
+      setReviews(reviewsByProvider);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
     }
   };
 
@@ -330,7 +362,7 @@ const Search = () => {
                             </div>
                             <RatingDisplay 
                               rating={listing.service_providers.average_rating || 0}
-                              totalReviews={listing.service_providers.total_reviews || 0}
+                              totalReviews={reviews[listing.service_providers.id]?.length || 0}
                               size="sm"
                             />
                           </div>
