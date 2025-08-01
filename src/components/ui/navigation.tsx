@@ -15,7 +15,8 @@ import {
   Star,
   MapPin,
   LogIn,
-  Settings
+  Settings,
+  MessageCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -55,6 +56,8 @@ const Navigation = () => {
     ];
 
     if (user) {
+      baseItems.push({ href: "/messages", label: "Messages", icon: MessageCircle });
+      
       if (userType === 'provider') {
         baseItems.push(
           { href: "/provider-dashboard", label: "Dashboard", icon: Settings },

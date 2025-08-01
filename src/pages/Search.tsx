@@ -10,6 +10,7 @@ import BookingModal from "@/components/BookingModal";
 import AdvancedSearchFilters from "@/components/AdvancedSearchFilters";
 import RatingDisplay from "@/components/RatingDisplay";
 import ReviewsViewModal from "@/components/ReviewsViewModal";
+import ChatModal from "@/components/ChatModal";
 import { 
   Search as SearchIcon, 
   MapPin, 
@@ -66,6 +67,8 @@ const Search = () => {
   const [selectedReviews, setSelectedReviews] = useState<any[]>([]);
   const [isReviewsModalOpen, setIsReviewsModalOpen] = useState(false);
   const [selectedProviderName, setSelectedProviderName] = useState("");
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<any>(null);
   const [filters, setFilters] = useState({
     priceRange: [0, 1000] as [number, number],
     rating: "",
@@ -366,9 +369,9 @@ const Search = () => {
                             </div>
                             <RatingDisplay 
                               rating={listing.service_providers.average_rating || 0}
-                              totalReviews={reviews[listing.service_providers.id]?.length || 0}
+                              totalReviews={listing.service_providers.total_reviews || 0}
                               size="sm"
-                              onClick={reviews[listing.service_providers.id]?.length > 0 ? () => {
+                              onClick={listing.service_providers.total_reviews > 0 ? () => {
                                 setSelectedReviews(reviews[listing.service_providers.id] || []);
                                 setSelectedProviderName(`${listing.service_providers.profiles.first_name} ${listing.service_providers.profiles.last_name}`);
                                 setIsReviewsModalOpen(true);
@@ -403,7 +406,14 @@ const Search = () => {
                             )}
                           </span>
                           <div className="flex space-x-2">
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedProvider(listing.service_providers);
+                                setIsChatModalOpen(true);
+                              }}
+                            >
                               <MessageCircle className="h-4 w-4" />
                             </Button>
                             {listing.service_providers.profiles.phone_number && (
@@ -459,6 +469,20 @@ const Search = () => {
           selectedReviews.reduce((sum, review) => sum + review.rating, 0) / selectedReviews.length : 0
         }
       />
+
+      {/* Chat Modal */}
+      {selectedProvider && (
+        <ChatModal
+          isOpen={isChatModalOpen}
+          onClose={() => {
+            setIsChatModalOpen(false);
+            setSelectedProvider(null);
+          }}
+          providerId={selectedProvider.id}
+          providerName={`${selectedProvider.profiles.first_name} ${selectedProvider.profiles.last_name}`}
+          providerAvatar={selectedProvider.profiles.avatar_url}
+        />
+      )}
     </div>
   );
 };

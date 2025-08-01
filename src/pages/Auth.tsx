@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Mail, 
   Lock, 
@@ -37,6 +38,9 @@ const Auth = () => {
     location: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -111,6 +115,39 @@ const Auth = () => {
   const handleFacebookSignIn = () => {
     // Implement Facebook sign-in
     console.log("Facebook sign-in");
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail) {
+      toast({
+        title: "Error",
+        description: "Please enter your email address",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsResetting(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/auth?reset=true`
+    });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Reset Email Sent",
+        description: "Check your email for password reset instructions",
+      });
+      setShowResetPassword(false);
+      setResetEmail('');
+    }
+    setIsResetting(false);
   };
 
   return (
@@ -266,7 +303,11 @@ const Auth = () => {
                     </Button>
 
                     <div className="text-center">
-                      <Button variant="link" className="text-sm">
+                      <Button 
+                        variant="link" 
+                        className="text-sm"
+                        onClick={() => setShowResetPassword(true)}
+                      >
                         Forgot your password?
                       </Button>
                     </div>
@@ -397,6 +438,56 @@ const Auth = () => {
               </Tabs>
             </CardContent>
           </Card>
+
+          {/* Password Reset Modal */}
+          {showResetPassword && (
+            <Card className="mt-4 shadow-elevated border-0">
+              <CardHeader>
+                <CardTitle className="text-lg">Reset Password</CardTitle>
+                <CardDescription>
+                  Enter your email address and we'll send you a reset link
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleResetPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="reset-email"
+                        type="email"
+                        placeholder="your@email.com"
+                        className="pl-10"
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button 
+                      type="submit" 
+                      className="flex-1 bg-gradient-primary"
+                      disabled={isResetting}
+                    >
+                      {isResetting ? 'Sending...' : 'Send Reset Email'}
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={() => {
+                        setShowResetPassword(false);
+                        setResetEmail('');
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
