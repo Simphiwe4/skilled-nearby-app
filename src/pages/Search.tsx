@@ -19,7 +19,8 @@ import {
   SlidersHorizontal,
   Heart,
   Phone,
-  MessageCircle
+  MessageCircle,
+  Navigation as LocationIcon
 } from "lucide-react";
 import Navigation from "@/components/ui/navigation";
 
@@ -33,6 +34,8 @@ interface ServiceListing {
   is_active: boolean;
   provider_id: string;
   category_id: string;
+  distance?: number;
+  distanceText?: string;
   service_categories: {
     name: string;
   };
@@ -69,20 +72,54 @@ const Search = () => {
   const [selectedProviderName, setSelectedProviderName] = useState("");
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<any>(null);
+  const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
+  const [locationPermission, setLocationPermission] = useState<string>('prompt');
   const [filters, setFilters] = useState({
     priceRange: [0, 1000] as [number, number],
     rating: "",
     category: "",
     distance: "",
     availability: "",
-    sortBy: "newest"
+    sortBy: "distance"
   });
 
   useEffect(() => {
     fetchListings();
     fetchCategories();
     fetchReviews();
+    getCurrentLocation();
   }, []);
+
+  const getCurrentLocation = () => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+          setLocationPermission('granted');
+        },
+        (error) => {
+          console.log('Location access denied or failed:', error);
+          setLocationPermission('denied');
+          // For testing in Pretoria area
+          setUserLocation({
+            lat: -25.7479,
+            lng: 28.2293
+          });
+        }
+      );
+    } else {
+      console.log('Geolocation not supported');
+      setLocationPermission('denied');
+      // For testing in Pretoria area
+      setUserLocation({
+        lat: -25.7479,
+        lng: 28.2293
+      });
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -169,22 +206,26 @@ const Search = () => {
         query = query.gte('price', filters.priceRange[0]).lte('price', filters.priceRange[1]);
       }
 
-      // Apply sorting
-      switch (filters.sortBy) {
-        case 'rating':
-          query = query.order('service_providers.average_rating', { ascending: false });
-          break;
-        case 'price_low':
-          query = query.order('price', { ascending: true });
-          break;
-        case 'price_high':
-          query = query.order('price', { ascending: false });
-          break;
-        case 'reviews':
-          query = query.order('service_providers.total_reviews', { ascending: false });
-          break;
-        default:
-          query = query.order('created_at', { ascending: false });
+      // Apply sorting (skip distance sorting here, will be done after distance calculation)
+      if (filters.sortBy !== 'distance') {
+        switch (filters.sortBy) {
+          case 'rating':
+            query = query.order('service_providers.average_rating', { ascending: false });
+            break;
+          case 'price_low':
+            query = query.order('price', { ascending: true });
+            break;
+          case 'price_high':
+            query = query.order('price', { ascending: false });
+            break;
+          case 'reviews':
+            query = query.order('service_providers.total_reviews', { ascending: false });
+            break;
+          default:
+            query = query.order('created_at', { ascending: false });
+        }
+      } else {
+        query = query.order('created_at', { ascending: false });
       }
 
       const { data, error } = await query;
@@ -202,7 +243,13 @@ const Search = () => {
       );
 
       console.log('Approved listings:', approvedListings);
-      setListings(approvedListings);
+      
+      // Calculate distances if user location is available and we want to sort by distance
+      if (userLocation && approvedListings.length > 0) {
+        await calculateDistances(approvedListings);
+      } else {
+        setListings(approvedListings);
+      }
     } catch (error) {
       console.error('Error fetching listings:', error);
       toast({
@@ -216,10 +263,69 @@ const Search = () => {
     }
   };
 
+  const calculateDistances = async (listingsData: ServiceListing[]) => {
+    try {
+      if (!userLocation) return;
+
+      // Filter listings that have location data
+      const listingsWithLocation = listingsData.filter(
+        listing => listing.service_providers.profiles.location
+      );
+
+      if (listingsWithLocation.length === 0) {
+        setListings(listingsData);
+        return;
+      }
+
+      // Prepare provider locations for distance calculation
+      const providerLocations = listingsWithLocation.map(listing => ({
+        id: listing.service_providers.id,
+        location: listing.service_providers.profiles.location!
+      }));
+
+      // Call distance calculation edge function
+      const { data, error } = await supabase.functions.invoke('calculate-distance', {
+        body: {
+          userLocation,
+          providerLocations
+        }
+      });
+
+      if (error) {
+        console.error('Distance calculation error:', error);
+        setListings(listingsData);
+        return;
+      }
+
+      // Map distances back to listings
+      const listingsWithDistance = listingsData.map(listing => {
+        const distanceData = data.distances.find(
+          (d: any) => d.providerId === listing.service_providers.id
+        );
+        
+        return {
+          ...listing,
+          distance: distanceData?.distance || Infinity,
+          distanceText: distanceData?.distanceText || 'Distance unavailable'
+        };
+      });
+
+      // Sort by distance if that's the selected sort option
+      if (filters.sortBy === 'distance') {
+        listingsWithDistance.sort((a, b) => (a.distance || Infinity) - (b.distance || Infinity));
+      }
+
+      setListings(listingsWithDistance);
+    } catch (error) {
+      console.error('Error calculating distances:', error);
+      setListings(listingsData);
+    }
+  };
+
   // Refetch when filters change
   useEffect(() => {
     fetchListings();
-  }, [filters]);
+  }, [filters, userLocation]);
 
   const filteredListings = listings.filter(listing => {
     // Add safety checks to prevent errors
@@ -271,8 +377,17 @@ const Search = () => {
                         placeholder="Location"
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 pr-10"
                       />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8"
+                        onClick={getCurrentLocation}
+                        title="Use current location"
+                      >
+                        <LocationIcon className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -363,7 +478,10 @@ const Search = () => {
                               {listing.service_providers.profiles.location && (
                                 <div className="flex items-center space-x-1 text-sm text-muted-foreground">
                                   <MapPin className="h-3 w-3" />
-                                  <span>{listing.service_providers.profiles.location}</span>
+                                  <span>
+                                    {listing.service_providers.profiles.location}
+                                    {listing.distanceText && ` • ${listing.distanceText}`}
+                                  </span>
                                 </div>
                               )}
                             </div>

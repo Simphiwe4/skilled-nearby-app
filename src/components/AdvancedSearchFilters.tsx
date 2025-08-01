@@ -46,7 +46,7 @@ const AdvancedSearchFilters = ({
       category: "",
       distance: "",
       availability: "",
-      sortBy: "newest"
+      sortBy: "distance"
     };
     setLocalFilters(resetFilters);
     onFiltersChange(resetFilters);
@@ -207,6 +207,7 @@ const AdvancedSearchFilters = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="distance">Closest first</SelectItem>
                   <SelectItem value="newest">Newest first</SelectItem>
                   <SelectItem value="rating">Highest rated</SelectItem>
                   <SelectItem value="price_low">Price: Low to High</SelectItem>
