@@ -306,7 +306,7 @@ const Search = () => {
         return {
           ...listing,
           distance: distanceData?.distance || Infinity,
-          distanceText: distanceData?.distanceText || 'Distance unavailable'
+          distanceText: distanceData?.distanceText ? `${Math.round(distanceData.distance || 0)} km` : 'Distance unavailable'
         };
       });
 
@@ -344,7 +344,11 @@ const Search = () => {
     const matchesLocation = !location || 
       listing.service_providers.profiles.location?.toLowerCase().includes(location.toLowerCase());
 
-    return matchesSearch && matchesLocation;
+    // Apply distance filter if set
+    const matchesDistance = !filters.distance || 
+      (listing.distance !== undefined && listing.distance <= parseFloat(filters.distance));
+
+    return matchesSearch && matchesLocation && matchesDistance;
   });
 
   return (
@@ -475,15 +479,15 @@ const Search = () => {
                               <Badge variant="outline" className="text-xs">
                                 {listing.service_categories.name}
                               </Badge>
-                              {listing.service_providers.profiles.location && (
-                                <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                                  <MapPin className="h-3 w-3" />
-                                  <span>
-                                    {listing.service_providers.profiles.location}
-                                    {listing.distanceText && ` • ${listing.distanceText}`}
-                                  </span>
-                                </div>
-                              )}
+                               {listing.service_providers.profiles.location && (
+                                 <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                                   <MapPin className="h-3 w-3" />
+                                   <span>
+                                     {listing.service_providers.profiles.location}
+                                     {listing.distanceText && listing.distanceText !== 'Distance unavailable' && ` • ${listing.distanceText}`}
+                                   </span>
+                                 </div>
+                               )}
                             </div>
                             <RatingDisplay 
                               rating={listing.service_providers.average_rating || 0}
