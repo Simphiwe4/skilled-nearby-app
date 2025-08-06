@@ -10,7 +10,7 @@ import BookingModal from "@/components/BookingModal";
 import AdvancedSearchFilters from "@/components/AdvancedSearchFilters";
 import RatingDisplay from "@/components/RatingDisplay";
 import ReviewsViewModal from "@/components/ReviewsViewModal";
-import ReviewsList from "@/components/ReviewsList";
+
 import ChatModal from "@/components/ChatModal";
 import { 
   Search as SearchIcon, 
@@ -490,16 +490,36 @@ const Search = () => {
                                  </div>
                                )}
                             </div>
-                            <RatingDisplay 
-                              rating={listing.service_providers.average_rating || 0}
-                              totalReviews={listing.service_providers.total_reviews || 0}
-                              size="sm"
-                              onClick={listing.service_providers.total_reviews > 0 ? () => {
-                                setSelectedReviews(reviews[listing.service_providers.id] || []);
-                                setSelectedProviderName(`${listing.service_providers.profiles.first_name} ${listing.service_providers.profiles.last_name}`);
-                                setIsReviewsModalOpen(true);
-                              } : undefined}
-                            />
+                            <div className="flex items-center space-x-1">
+                              <div className="flex">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <Star
+                                    key={star}
+                                    className={`h-4 w-4 ${
+                                      star <= (listing.service_providers.average_rating || 0)
+                                        ? 'fill-yellow-400 text-yellow-400'
+                                        : 'text-muted-foreground'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                              {listing.service_providers.total_reviews > 0 ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-xs text-primary hover:underline p-0 h-auto"
+                                  onClick={() => {
+                                    setSelectedReviews(reviews[listing.service_providers.id] || []);
+                                    setSelectedProviderName(`${listing.service_providers.profiles.first_name} ${listing.service_providers.profiles.last_name}`);
+                                    setIsReviewsModalOpen(true);
+                                  }}
+                                >
+                                  {listing.service_providers.total_reviews} Reviews
+                                </Button>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">No reviews yet</span>
+                              )}
+                            </div>
                           </div>
 
                         {/* Skills */}
@@ -518,12 +538,6 @@ const Search = () => {
                           {listing.description}
                         </p>
 
-                        {/* Reviews Preview */}
-                        {reviews[listing.service_providers.id] && reviews[listing.service_providers.id].length > 0 && (
-                          <div className="pt-2 border-t">
-                            <ReviewsList providerId={listing.service_providers.id} />
-                          </div>
-                        )}
 
                         {/* Price and Actions */}
                         <div className="flex items-center justify-between pt-2 border-t">
