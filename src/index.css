@@ -17,41 +17,41 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 25 15% 15%;
 
-    --primary: 24 85% 55%;
+    --primary: 217 91% 45%;
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 35 20% 94%;
-    --secondary-foreground: 25 15% 25%;
+    --secondary: 210 15% 94%;
+    --secondary-foreground: 217 25% 25%;
 
-    --muted: 35 15% 96%;
-    --muted-foreground: 25 10% 45%;
+    --muted: 210 15% 96%;
+    --muted-foreground: 217 10% 45%;
 
-    --accent: 42 88% 65%;
-    --accent-foreground: 25 15% 15%;
+    --accent: 217 75% 65%;
+    --accent-foreground: 217 15% 15%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 35 15% 90%;
     --input: 35 15% 93%;
-    --ring: 24 85% 55%;
+    --ring: 217 91% 45%;
 
     --radius: 0.75rem;
 
     /* Custom tokens for Skilled Nearby */
-    --primary-glow: 24 90% 70%;
+    --primary-glow: 217 85% 65%;
     --success: 130 75% 45%;
     --success-foreground: 0 0% 98%;
     --warning: 45 90% 60%;
     --info: 210 85% 60%;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(24 85% 55%), hsl(24 90% 70%));
-    --gradient-secondary: linear-gradient(135deg, hsl(35 20% 94%), hsl(42 88% 65%));
-    --gradient-hero: linear-gradient(135deg, hsl(24 85% 55%) 0%, hsl(42 88% 65%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 45%), hsl(217 85% 65%));
+    --gradient-secondary: linear-gradient(135deg, hsl(210 15% 94%), hsl(217 75% 65%));
+    --gradient-hero: linear-gradient(135deg, hsl(217 91% 45%) 0%, hsl(217 75% 65%) 100%);
     
     /* Shadows */
-    --shadow-primary: 0 10px 25px -5px hsl(24 85% 55% / 0.2);
+    --shadow-primary: 0 10px 25px -5px hsl(217 91% 45% / 0.2);
     --shadow-card: 0 4px 15px -2px hsl(25 15% 15% / 0.08);
     --shadow-elevated: 0 8px 25px -5px hsl(25 15% 15% / 0.12);
     
