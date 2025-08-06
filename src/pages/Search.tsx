@@ -10,6 +10,7 @@ import BookingModal from "@/components/BookingModal";
 import AdvancedSearchFilters from "@/components/AdvancedSearchFilters";
 import RatingDisplay from "@/components/RatingDisplay";
 import ReviewsViewModal from "@/components/ReviewsViewModal";
+import ReviewsList from "@/components/ReviewsList";
 import ChatModal from "@/components/ChatModal";
 import { 
   Search as SearchIcon, 
@@ -516,6 +517,13 @@ const Search = () => {
                         <p className="text-sm text-muted-foreground line-clamp-2">
                           {listing.description}
                         </p>
+
+                        {/* Reviews Preview */}
+                        {reviews[listing.service_providers.id] && reviews[listing.service_providers.id].length > 0 && (
+                          <div className="pt-2 border-t">
+                            <ReviewsList providerId={listing.service_providers.id} />
+                          </div>
+                        )}
 
                         {/* Price and Actions */}
                         <div className="flex items-center justify-between pt-2 border-t">
