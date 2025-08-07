@@ -144,7 +144,8 @@ const Search = () => {
           *,
           profiles!reviews_reviewer_id_fkey (
             first_name,
-            last_name
+            last_name,
+            avatar_url
           )
         `)
         .order('created_at', { ascending: false });
@@ -160,6 +161,7 @@ const Search = () => {
         reviewsByProvider[review.provider_id].push(review);
       });
       
+      console.log('Reviews fetched and grouped:', reviewsByProvider);
       setReviews(reviewsByProvider);
     } catch (error) {
       console.error('Error fetching reviews:', error);
