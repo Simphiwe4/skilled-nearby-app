@@ -11,8 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Calendar as CalendarIcon, Clock, MapPin, User } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, MapPin, User, CreditCard } from "lucide-react";
 import { format } from "date-fns";
+import PayFastPayment from "./PayFastPayment";
 
 interface ServiceListing {
   id: string;
@@ -50,6 +51,7 @@ const BookingModal = ({ isOpen, onClose, listing }: BookingModalProps) => {
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [clientNotes, setClientNotes] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
 
   // Generate time slots (9 AM to 6 PM)
   const timeSlots = [
@@ -270,19 +272,50 @@ const BookingModal = ({ isOpen, onClose, listing }: BookingModalProps) => {
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="flex space-x-3 pt-4">
-            <Button variant="outline" onClick={onClose} className="flex-1">
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleBooking} 
-              disabled={!selectedDate || !selectedTime || loading}
-              className="flex-1 bg-gradient-primary"
-            >
-              {loading ? "Submitting..." : "Confirm Booking"}
-            </Button>
-          </div>
+          {/* Payment Section */}
+          {showPayment && calculateTotal() ? (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2 text-lg font-semibold">
+                <CreditCard className="h-5 w-5" />
+                <span>Payment</span>
+              </div>
+              <PayFastPayment
+                amount={calculateTotal()!}
+                itemName={listing.title}
+                itemDescription={`${listing.service_categories.name} service with ${listing.service_providers.profiles.first_name} ${listing.service_providers.profiles.last_name}`}
+                onSuccess={() => {
+                  handleBooking();
+                  setShowPayment(false);
+                }}
+                onCancel={() => setShowPayment(false)}
+              />
+            </div>
+          ) : (
+            /* Action Buttons */
+            <div className="flex space-x-3 pt-4">
+              <Button variant="outline" onClick={onClose} className="flex-1">
+                Cancel
+              </Button>
+              {calculateTotal() ? (
+                <Button 
+                  onClick={() => setShowPayment(true)} 
+                  disabled={!selectedDate || !selectedTime || loading}
+                  className="flex-1 bg-gradient-primary"
+                >
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Pay & Book (R{calculateTotal()})
+                </Button>
+              ) : (
+                <Button 
+                  onClick={handleBooking} 
+                  disabled={!selectedDate || !selectedTime || loading}
+                  className="flex-1 bg-gradient-primary"
+                >
+                  {loading ? "Submitting..." : "Confirm Booking"}
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
