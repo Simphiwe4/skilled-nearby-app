@@ -101,7 +101,7 @@ const BookingModal = ({ isOpen, onClose, listing }: BookingModalProps) => {
           scheduled_date: format(selectedDate, 'yyyy-MM-dd'),
           scheduled_time: selectedTime,
           duration_minutes: listing.duration_minutes || 60,
-          total_price: listing.price,
+          total_price: calculateTotal(),
           client_notes: clientNotes,
           status: 'pending'
         })
@@ -151,6 +151,16 @@ const BookingModal = ({ isOpen, onClose, listing }: BookingModalProps) => {
       return listing.price * hours;
     }
     return listing.price;
+  };
+
+  const calculateUpfrontPayment = () => {
+    const total = calculateTotal();
+    return total ? total * 0.2 : null; // 20% upfront
+  };
+
+  const calculateRemainingPayment = () => {
+    const total = calculateTotal();
+    return total ? total * 0.8 : null; // 80% remaining
   };
 
   return (
@@ -266,7 +276,17 @@ const BookingModal = ({ isOpen, onClose, listing }: BookingModalProps) => {
                 <p><strong>Time:</strong> {selectedTime}</p>
                 <p><strong>Duration:</strong> {listing.duration_minutes || 60} minutes</p>
                 {calculateTotal() && (
-                  <p><strong>Total Price:</strong> R{calculateTotal()}</p>
+                  <>
+                    <p><strong>Total Price:</strong> R{calculateTotal()}</p>
+                    <div className="bg-background p-3 rounded border mt-2">
+                      <p className="text-sm font-medium">Payment Structure:</p>
+                      <p className="text-sm">• Upfront payment (20%): <strong>R{calculateUpfrontPayment()?.toFixed(2)}</strong></p>
+                      <p className="text-sm">• Remaining payment (80%): <strong>R{calculateRemainingPayment()?.toFixed(2)}</strong></p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Remaining balance due upon service completion
+                      </p>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
@@ -280,9 +300,9 @@ const BookingModal = ({ isOpen, onClose, listing }: BookingModalProps) => {
                 <span>Payment</span>
               </div>
               <PayFastPayment
-                amount={calculateTotal()!}
-                itemName={listing.title}
-                itemDescription={`${listing.service_categories.name} service with ${listing.service_providers.profiles.first_name} ${listing.service_providers.profiles.last_name}`}
+                amount={calculateUpfrontPayment()!}
+                itemName={`${listing.title} - Upfront Payment (20%)`}
+                itemDescription={`Upfront payment for ${listing.service_categories.name} service with ${listing.service_providers.profiles.first_name} ${listing.service_providers.profiles.last_name}. Remaining R${calculateRemainingPayment()?.toFixed(2)} due upon completion.`}
                 onSuccess={() => {
                   handleBooking();
                   setShowPayment(false);
@@ -303,7 +323,7 @@ const BookingModal = ({ isOpen, onClose, listing }: BookingModalProps) => {
                   className="flex-1 bg-gradient-primary"
                 >
                   <CreditCard className="mr-2 h-4 w-4" />
-                  Pay & Book (R{calculateTotal()})
+                  Pay Upfront (R{calculateUpfrontPayment()?.toFixed(2)})
                 </Button>
               ) : (
                 <Button 
