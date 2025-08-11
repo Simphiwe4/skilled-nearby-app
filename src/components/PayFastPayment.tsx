@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import CryptoJS from "crypto-js";
 
 interface PayFastPaymentProps {
   amount: number;
@@ -40,11 +41,16 @@ const PayFastPayment = ({
   };
 
   const generateSignature = (data: Record<string, string>) => {
+    // Remove merchant_key from data before generating signature
+    const { merchant_key, ...dataWithoutKey } = data;
+    
     // Sort the data by key
-    const sortedData = Object.keys(data)
+    const sortedData = Object.keys(dataWithoutKey)
       .sort()
       .reduce((result: Record<string, string>, key) => {
-        result[key] = data[key];
+        if (dataWithoutKey[key] !== "") {
+          result[key] = dataWithoutKey[key];
+        }
         return result;
       }, {});
 
@@ -53,9 +59,14 @@ const PayFastPayment = ({
       .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
       .join("&");
 
+    // Add passphrase for sandbox (empty string for sandbox, so just use paramString)
+    const stringToHash = paramString;
+
+    // Generate MD5 hash using crypto-js
+    const signature = CryptoJS.MD5(stringToHash).toString();
+    
     // Note: In production, signature generation should be done on the server
-    // for security reasons. This is simplified for demonstration.
-    return paramString;
+    return signature;
   };
 
   const handlePayment = async () => {
