@@ -511,9 +511,6 @@ const Search = () => {
                                   size="sm"
                                   className="text-xs text-primary hover:underline p-0 h-auto"
                                    onClick={() => {
-                                     console.log('Provider ID:', listing.service_providers.id);
-                                     console.log('Available reviews:', Object.keys(reviews));
-                                     console.log('Reviews for this provider:', reviews[listing.service_providers.id]);
                                      setSelectedReviews(reviews[listing.service_providers.id] || []);
                                      setSelectedProviderName(`${listing.service_providers.profiles.first_name} ${listing.service_providers.profiles.last_name}`);
                                      setIsReviewsModalOpen(true);
