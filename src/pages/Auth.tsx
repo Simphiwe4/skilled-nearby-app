@@ -21,12 +21,13 @@ import {
   Facebook,
   ArrowLeft
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 const Auth = () => {
   const { user, signUp, signIn, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [userType, setUserType] = useState<"client" | "provider">("client");
   const [formData, setFormData] = useState({
@@ -41,12 +42,77 @@ const Auth = () => {
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [isResetting, setIsResetting] = useState(false);
+  
+  // Password reset states
+  const [isPasswordReset, setIsPasswordReset] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    // Check if this is a password reset flow
+    const accessToken = searchParams.get('access_token');
+    const refreshToken = searchParams.get('refresh_token');
+    const type = searchParams.get('type');
+    
+    if (accessToken && refreshToken && type === 'recovery') {
+      // This is a password reset flow
+      setIsPasswordReset(true);
+      
+      // Set the session with the tokens from the URL
+      supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken
+      });
+    } else if (user) {
       navigate('/profile');
     }
-  }, [user, navigate]);
+  }, [user, navigate, searchParams]);
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords do not match",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Error", 
+        description: "Password must be at least 6 characters long",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Password updated successfully!",
+      });
+      // Clear the URL parameters and redirect to profile
+      navigate('/profile', { replace: true });
+    }
+    
+    setIsUpdatingPassword(false);
+  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,7 +196,7 @@ const Auth = () => {
 
     setIsResetting(true);
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/auth?reset=true`
+      redirectTo: `${window.location.origin}/auth?type=recovery`
     });
 
     if (error) {
@@ -149,6 +215,106 @@ const Auth = () => {
     }
     setIsResetting(false);
   };
+
+  // If this is a password reset flow, show the password reset form
+  if (isPasswordReset) {
+    return (
+      <div className="min-h-screen bg-gradient-hero flex flex-col">
+        {/* Header */}
+        <div className="container px-4 py-6">
+          <div className="flex items-center justify-between">
+            <Link to="/" className="flex items-center space-x-2">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Home
+              </Button>
+            </Link>
+            <Link to="/" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+                <MapPin className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <span className="text-xl font-bold text-primary-foreground">
+                Skilled Nearby
+              </span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Password Reset Form */}
+        <div className="flex-1 flex items-center justify-center px-4 pb-12">
+          <div className="w-full max-w-md">
+            <Card className="shadow-elevated border-0">
+              <CardHeader className="space-y-4 text-center pb-2">
+                <div>
+                  <CardTitle className="text-2xl">Reset Password</CardTitle>
+                  <CardDescription>
+                    Enter your new password below
+                  </CardDescription>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-6">
+                <form onSubmit={handleUpdatePassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">New Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="new-password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Enter new password"
+                        className="pl-10 pr-10"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        required
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirm Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="confirm-password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Confirm new password"
+                        className="pl-10"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    className="w-full h-11 bg-gradient-primary"
+                    disabled={isUpdatingPassword}
+                  >
+                    {isUpdatingPassword ? 'Updating Password...' : 'Update Password'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-hero flex flex-col">
