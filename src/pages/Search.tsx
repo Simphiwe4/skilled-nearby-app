@@ -313,7 +313,7 @@ const Search = () => {
         return {
           ...listing,
           distance: distanceData?.distance || Infinity,
-          distanceText: distanceData?.distanceText ? `${Math.round(distanceData.distance || 0)} km` : 'Distance unavailable'
+          distanceText: distanceData?.distanceText ? `${Math.round(distanceData.distance || 0).toLocaleString()} km` : 'Distance unavailable'
         };
       });
 

@@ -106,15 +106,13 @@ const PayFastPayment = ({
       form.method = "POST";
       form.action = "https://sandbox.payfast.co.za/eng/process"; // Use https://www.payfast.co.za/eng/process for production
 
-      // Add all fields to form (except merchant_key)
+      // Add all fields to form (including merchant_key for sandbox)
       Object.entries(paymentData).forEach(([key, value]) => {
-        if (key !== 'merchant_key') {  // Don't include merchant_key in form submission
-          const input = document.createElement("input");
-          input.type = "hidden";
-          input.name = key;
-          input.value = value;
-          form.appendChild(input);
-        }
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = value;
+        form.appendChild(input);
       });
 
       // Add signature field
