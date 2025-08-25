@@ -10,6 +10,8 @@ import BookingModal from "@/components/BookingModal";
 import AdvancedSearchFilters from "@/components/AdvancedSearchFilters";
 import RatingDisplay from "@/components/RatingDisplay";
 import ReviewsViewModal from "@/components/ReviewsViewModal";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 import ChatModal from "@/components/ChatModal";
 import { 
@@ -59,6 +61,8 @@ interface ServiceListing {
 
 const Search = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -571,6 +575,10 @@ const Search = () => {
                               size="sm" 
                               className="bg-gradient-primary"
                               onClick={() => {
+                                if (!user) {
+                                  navigate('/auth');
+                                  return;
+                                }
                                 setSelectedListing(listing);
                                 setIsBookingModalOpen(true);
                               }}

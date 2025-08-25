@@ -41,31 +41,30 @@ const PayFastPayment = ({
   };
 
   const generateSignature = (data: Record<string, string>) => {
-    // Remove merchant_key from data before generating signature
-    const { merchant_key, ...dataWithoutKey } = data;
+    // Remove signature from data if it exists and merchant_key
+    const { signature: _, merchant_key, ...dataForSigning } = data;
     
-    // Sort the data by key
-    const sortedData = Object.keys(dataWithoutKey)
+    // Sort the data by key and filter out empty values
+    const sortedData = Object.keys(dataForSigning)
+      .filter(key => dataForSigning[key] !== "" && dataForSigning[key] != null)
       .sort()
       .reduce((result: Record<string, string>, key) => {
-        if (dataWithoutKey[key] !== "") {
-          result[key] = dataWithoutKey[key];
-        }
+        result[key] = dataForSigning[key];
         return result;
       }, {});
 
     // Create parameter string
     const paramString = Object.entries(sortedData)
-      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+      .map(([key, value]) => `${value}`)
       .join("&");
 
-    // Add passphrase for sandbox (empty string for sandbox, so just use paramString)
-    const stringToHash = paramString;
+    // Add merchant key to the end for signing (sandbox doesn't use passphrase)
+    const stringToHash = paramString + "&" + merchant_key;
 
     // Generate MD5 hash using crypto-js
     const signature = CryptoJS.MD5(stringToHash).toString();
     
-    // Note: In production, signature generation should be done on the server
+    console.log('Signature data:', { sortedData, paramString, stringToHash, signature });
     return signature;
   };
 
@@ -107,13 +106,15 @@ const PayFastPayment = ({
       form.method = "POST";
       form.action = "https://sandbox.payfast.co.za/eng/process"; // Use https://www.payfast.co.za/eng/process for production
 
-      // Add all fields to form
+      // Add all fields to form (except merchant_key)
       Object.entries(paymentData).forEach(([key, value]) => {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = key;
-        input.value = value;
-        form.appendChild(input);
+        if (key !== 'merchant_key') {  // Don't include merchant_key in form submission
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = value;
+          form.appendChild(input);
+        }
       });
 
       // Add signature field
