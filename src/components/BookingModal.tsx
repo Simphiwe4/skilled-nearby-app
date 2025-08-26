@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Calendar as CalendarIcon, Clock, MapPin, User, CreditCard } from "lucide-react";
 import { format } from "date-fns";
-import PayFastPayment from "./PayFastPayment";
+import StripePayment from "./StripePayment";
 
 interface ServiceListing {
   id: string;
@@ -299,16 +299,16 @@ const BookingModal = ({ isOpen, onClose, listing }: BookingModalProps) => {
                 <CreditCard className="h-5 w-5" />
                 <span>Payment</span>
               </div>
-              <PayFastPayment
-                amount={calculateUpfrontPayment()!}
-                itemName={`${listing.title} - Upfront Payment (20%)`}
-                itemDescription={`Upfront payment for ${listing.service_categories.name} service with ${listing.service_providers.profiles.first_name} ${listing.service_providers.profiles.last_name}. Remaining R${calculateRemainingPayment()?.toFixed(2)} due upon completion.`}
-                onSuccess={() => {
-                  handleBooking();
-                  setShowPayment(false);
-                }}
-                onCancel={() => setShowPayment(false)}
-              />
+            <StripePayment
+              amount={calculateUpfrontPayment()! * 100} // Convert to cents
+              currency="ZAR"
+              serviceTitle={`${listing.title} - Upfront Payment (20%)`}
+              onSuccess={() => {
+                handleBooking();
+                setShowPayment(false);
+              }}
+              onCancel={() => setShowPayment(false)}
+            />
             </div>
           ) : (
             /* Action Buttons */
