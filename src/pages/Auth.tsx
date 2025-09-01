@@ -173,14 +173,38 @@ const Auth = () => {
     setIsSubmitting(false);
   };
 
-  const handleGoogleSignIn = () => {
-    // Implement Google sign-in
-    console.log("Google sign-in");
+  const handleGoogleSignIn = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/profile`
+      }
+    });
+    
+    if (error) {
+      toast({
+        title: "Sign In Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleFacebookSignIn = () => {
-    // Implement Facebook sign-in
-    console.log("Facebook sign-in");
+  const handleFacebookSignIn = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'facebook',
+      options: {
+        redirectTo: `${window.location.origin}/profile`
+      }
+    });
+    
+    if (error) {
+      toast({
+        title: "Sign In Failed", 
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {

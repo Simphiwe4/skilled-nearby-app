@@ -10,6 +10,7 @@ import BookingModal from "@/components/BookingModal";
 import AdvancedSearchFilters from "@/components/AdvancedSearchFilters";
 import RatingDisplay from "@/components/RatingDisplay";
 import ReviewsViewModal from "@/components/ReviewsViewModal";
+import PhoneCallButton from "@/components/PhoneCallButton";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
@@ -368,64 +369,68 @@ const Search = () => {
           <div className="space-y-4">
             <h1 className="text-2xl md:text-3xl font-bold">Find Services Near You</h1>
             
-            {/* Search Form */}
-            <Card className="shadow-card">
-              <CardContent className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="md:col-span-2 space-y-4 md:space-y-0 md:grid md:grid-cols-2 md:gap-4">
-                    <div className="relative">
-                      <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="What service do you need?"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Location"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        className="pl-10 pr-10"
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8"
-                        onClick={getCurrentLocation}
-                        title="Use current location"
-                      >
-                        <LocationIcon className="h-4 w-4" />
-                      </Button>
-                    </div>
+          {/* Search Form */}
+          <Card className="shadow-card">
+            <CardContent className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2 space-y-4 md:space-y-0 md:grid md:grid-cols-2 md:gap-4">
+                  <div className="relative">
+                    <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="What service do you need?"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
                   </div>
-                  <div className="flex gap-2">
-                    <Button className="flex-1 bg-gradient-primary">
-                      <SearchIcon className="h-4 w-4 mr-2" />
-                      Search
-                    </Button>
-                    <Button 
-                      variant="outline" 
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Location"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="pl-10 pr-10"
+                    />
+                    <Button
+                      variant="ghost"
                       size="icon"
-                      onClick={() => setShowFilters(!showFilters)}
+                      className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8"
+                      onClick={getCurrentLocation}
+                      title="Use current location"
                     >
-                      <SlidersHorizontal className="h-4 w-4" />
+                      <LocationIcon className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-                
-                {/* Advanced Filters */}
-                <AdvancedSearchFilters
-                  isOpen={showFilters}
-                  onClose={() => setShowFilters(false)}
-                  filters={filters}
-                  onFiltersChange={setFilters}
-                  categories={categories}
-                />
-              </CardContent>
-            </Card>
+                <div className="flex gap-2">
+                  <Button className="flex-1 bg-gradient-primary" onClick={() => fetchListings()}>
+                    <SearchIcon className="h-4 w-4 mr-2" />
+                    Search
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => setShowFilters(!showFilters)}
+                  >
+                    <SlidersHorizontal className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Advanced Filters - Rendered outside the card to prevent layout issues */}
+          {showFilters && (
+            <div className="mt-4">
+              <AdvancedSearchFilters
+                isOpen={showFilters}
+                onClose={() => setShowFilters(false)}
+                filters={filters}
+                onFiltersChange={setFilters}
+                categories={categories}
+              />
+            </div>
+          )}
           </div>
 
           {/* Results */}
@@ -567,9 +572,10 @@ const Search = () => {
                               <MessageCircle className="h-4 w-4" />
                             </Button>
                             {listing.service_providers.profiles.phone_number && (
-                              <Button variant="outline" size="sm">
-                                <Phone className="h-4 w-4" />
-                              </Button>
+                              <PhoneCallButton 
+                                phoneNumber={listing.service_providers.profiles.phone_number}
+                                size="sm"
+                              />
                             )}
                             <Button 
                               size="sm" 

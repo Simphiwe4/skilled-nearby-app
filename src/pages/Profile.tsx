@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import ServiceListingForm from "@/components/ServiceListingForm";
+import ServiceProviderSetup from "@/components/ServiceProviderSetup";
 import { 
   User, 
   MapPin, 
@@ -56,6 +57,7 @@ const Profile = () => {
   const [serviceProvider, setServiceProvider] = useState<ServiceProvider | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [showProviderSetup, setShowProviderSetup] = useState(false);
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -121,6 +123,9 @@ const Profile = () => {
             experience_years: providerData.experience_years?.toString() || '',
             hourly_rate: providerData.hourly_rate?.toString() || ''
           }));
+        } else {
+          // Provider hasn't completed setup yet
+          setShowProviderSetup(true);
         }
       }
     } catch (error) {
@@ -209,6 +214,42 @@ const Profile = () => {
     return (
       <div className="min-h-screen bg-gradient-hero flex items-center justify-center">
         <div className="text-primary-foreground">Profile not found</div>
+      </div>
+    );
+  }
+
+  // Show provider setup if they haven't completed it
+  if (profile.user_type === 'provider' && showProviderSetup) {
+    return (
+      <div className="min-h-screen bg-gradient-hero">
+        <div className="container px-4 py-6">
+          <div className="flex items-center justify-between mb-8">
+            <Link to="/" className="flex items-center space-x-2">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Home
+              </Button>
+            </Link>
+            <Link to="/" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+                <MapPin className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <span className="text-xl font-bold text-primary-foreground">
+                Skilled Nearby
+              </span>
+            </Link>
+            <Button variant="outline" onClick={handleSignOut}>
+              Sign Out
+            </Button>
+          </div>
+
+          <ServiceProviderSetup 
+            onSetupComplete={() => {
+              setShowProviderSetup(false);
+              fetchProfile();
+            }} 
+          />
+        </div>
       </div>
     );
   }

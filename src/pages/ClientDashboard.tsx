@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import ReviewModal from "@/components/ReviewModal";
+import PhoneCallButton from "@/components/PhoneCallButton";
 import Navigation from "@/components/ui/navigation";
 import { 
   Calendar, 
@@ -314,10 +315,10 @@ const ClientDashboard = () => {
                           <div className="flex space-x-2 pt-2 border-t">
                             {/* TODO: Add messaging functionality */}
                             {booking.service_providers.profiles.phone_number && (
-                              <Button variant="outline" size="sm">
-                                <Phone className="h-4 w-4 mr-2" />
-                                Call
-                              </Button>
+                              <PhoneCallButton 
+                                phoneNumber={booking.service_providers.profiles.phone_number}
+                                size="sm"
+                              />
                             )}
                             {booking.status === 'pending' && (
                               <Button 

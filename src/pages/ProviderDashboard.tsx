@@ -13,6 +13,7 @@ import Navigation from "@/components/ui/navigation";
 import ServiceListingForm from "@/components/ServiceListingForm";
 import AvailabilityManager from "@/components/AvailabilityManager";
 import ReviewsList from "@/components/ReviewsList";
+import PhoneCallButton from "@/components/PhoneCallButton";
 import { 
   Calendar, 
   Clock, 
@@ -365,10 +366,10 @@ const ProviderDashboard = () => {
                           <div className="flex flex-wrap gap-2 pt-2 border-t">
                             {/* TODO: Add messaging functionality */}
                             {booking.profiles.phone_number && (
-                              <Button variant="outline" size="sm">
-                                <Phone className="h-4 w-4 mr-2" />
-                                Call
-                              </Button>
+                              <PhoneCallButton 
+                                phoneNumber={booking.profiles.phone_number}
+                                size="sm"
+                              />
                             )}
                             
                             {booking.status === 'pending' && (
