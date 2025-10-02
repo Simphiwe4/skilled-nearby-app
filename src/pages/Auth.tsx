@@ -143,7 +143,9 @@ const Auth = () => {
     } else {
       toast({
         title: "Success",
-        description: "Account created successfully! Please check your email to confirm your account.",
+        description: userType === "provider" 
+          ? "Business account created successfully! Please check your email to confirm your account."
+          : "Account created successfully! Please check your email to confirm your account.",
       });
     }
     setIsSubmitting(false);
@@ -506,9 +508,20 @@ const Auth = () => {
 
                 <TabsContent value="register" className="space-y-4">
                   <form onSubmit={handleSignUp} className="space-y-4">
+                    {userType === "provider" && (
+                      <div className="bg-secondary/50 rounded-lg p-3 mb-2">
+                        <p className="text-sm font-medium">Business Registration</p>
+                        <p className="text-xs text-muted-foreground">
+                          Enter contact person details for your business account
+                        </p>
+                      </div>
+                    )}
+                    
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="first-name">First Name</Label>
+                        <Label htmlFor="first-name">
+                          {userType === "provider" ? "Contact Person First Name" : "First Name"}
+                        </Label>
                         <Input
                           id="first-name"
                           placeholder="John"
@@ -518,7 +531,9 @@ const Auth = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="last-name">Last Name</Label>
+                        <Label htmlFor="last-name">
+                          {userType === "provider" ? "Contact Person Last Name" : "Last Name"}
+                        </Label>
                         <Input
                           id="last-name"
                           placeholder="Doe"
@@ -530,13 +545,15 @@ const Auth = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="register-email">Email</Label>
+                      <Label htmlFor="register-email">
+                        {userType === "provider" ? "Business Email" : "Email"}
+                      </Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="register-email"
                           type="email"
-                          placeholder="your@email.com"
+                          placeholder={userType === "provider" ? "business@company.com" : "your@email.com"}
                           className="pl-10"
                           value={formData.email}
                           onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
@@ -546,7 +563,9 @@ const Auth = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
+                      <Label htmlFor="phone">
+                        {userType === "provider" ? "Business Phone Number" : "Phone Number"}
+                      </Label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -556,21 +575,23 @@ const Auth = () => {
                           className="pl-10"
                           value={formData.phone}
                           onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                          required={userType === "provider"}
                         />
                       </div>
                     </div>
 
                     {userType === "provider" && (
                       <div className="space-y-2">
-                        <Label htmlFor="location">Location</Label>
+                        <Label htmlFor="location">Business Location *</Label>
                         <div className="relative">
                           <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input
                             id="location"
-                            placeholder="Your city/area"
+                            placeholder="e.g., Johannesburg, Cape Town"
                             className="pl-10"
                             value={formData.location}
                             onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                            required
                           />
                         </div>
                       </div>
@@ -610,7 +631,7 @@ const Auth = () => {
                       className="w-full h-11 bg-gradient-primary"
                       disabled={isSubmitting || loading}
                     >
-                      {isSubmitting ? 'Creating Account...' : 'Create Account'}
+                      {isSubmitting ? 'Creating Account...' : userType === "provider" ? 'Register Business' : 'Create Account'}
                     </Button>
 
                     <p className="text-xs text-muted-foreground text-center">
