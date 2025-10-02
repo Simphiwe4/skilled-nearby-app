@@ -11,6 +11,7 @@ import AdvancedSearchFilters from "@/components/AdvancedSearchFilters";
 import RatingDisplay from "@/components/RatingDisplay";
 import ReviewsViewModal from "@/components/ReviewsViewModal";
 import PhoneCallButton from "@/components/PhoneCallButton";
+import BusinessDetailModal from "@/components/BusinessDetailModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
@@ -80,6 +81,9 @@ const Search = () => {
   const [selectedProvider, setSelectedProvider] = useState<any>(null);
   const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
   const [locationPermission, setLocationPermission] = useState<string>('prompt');
+  const [isBusinessDetailOpen, setIsBusinessDetailOpen] = useState(false);
+  const [selectedBusiness, setSelectedBusiness] = useState<any>(null);
+  const [businessServices, setBusinessServices] = useState<ServiceListing[]>([]);
   const [filters, setFilters] = useState({
     priceRange: [0, 1000] as [number, number],
     rating: "",
@@ -359,6 +363,29 @@ const Search = () => {
     return matchesSearch && matchesLocation && matchesDistance;
   });
 
+  // Group listings by business/provider
+  const businessGroups = filteredListings.reduce((acc, listing) => {
+    const providerId = listing.service_providers.id;
+    if (!acc[providerId]) {
+      acc[providerId] = {
+        provider: listing.service_providers,
+        services: [],
+        distance: listing.distance,
+        distanceText: listing.distanceText
+      };
+    }
+    acc[providerId].services.push(listing);
+    return acc;
+  }, {} as Record<string, any>);
+
+  const businesses = Object.values(businessGroups);
+
+  const handleBusinessClick = (business: any) => {
+    setSelectedBusiness(business.provider);
+    setBusinessServices(business.services);
+    setIsBusinessDetailOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -367,7 +394,7 @@ const Search = () => {
         {/* Search Header */}
         <div className="space-y-6">
           <div className="space-y-4">
-            <h1 className="text-2xl md:text-3xl font-bold">Find Services Near You</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">Find Local Service Businesses</h1>
             
           {/* Search Form */}
           <Card className="shadow-card">
@@ -437,161 +464,143 @@ const Search = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-muted-foreground">
-                {loading ? 'Loading...' : `Found ${filteredListings.length} service listings`}
+                {loading ? 'Loading...' : `Found ${businesses.length} local businesses`}
               </p>
             </div>
 
-            {/* Listing Cards */}
+            {/* Business Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {loading ? (
                 <div className="col-span-full text-center py-8 text-muted-foreground">
                   Loading services...
                 </div>
-              ) : filteredListings.length === 0 ? (
+              ) : businesses.length === 0 ? (
                 <div className="col-span-full text-center py-8 text-muted-foreground">
-                  No services found. Try adjusting your search criteria.
+                  No businesses found. Try adjusting your search criteria.
                 </div>
               ) : (
-                filteredListings.map((listing) => (
-                  <Card key={listing.id} className="hover:shadow-elevated transition-shadow cursor-pointer">
+                businesses.map((business) => (
+                  <Card 
+                    key={business.provider.id} 
+                    className="hover:shadow-elevated transition-shadow cursor-pointer"
+                    onClick={() => handleBusinessClick(business)}
+                  >
                     <CardContent className="p-6">
                       <div className="space-y-4">
                         {/* Header */}
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center space-x-3">
-                            <Avatar className="h-12 w-12">
-                              <AvatarImage src={listing.service_providers.profiles.avatar_url} />
-                              <AvatarFallback>
-                                {listing.service_providers.profiles.first_name[0]}
-                                {listing.service_providers.profiles.last_name[0]}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <div className="flex items-center space-x-2">
-                                <h3 className="font-semibold">
-                                  {listing.service_providers.profiles.first_name} {listing.service_providers.profiles.last_name}
+                        <div className="flex items-start gap-3">
+                          <Avatar className="h-14 w-14">
+                            <AvatarImage src={business.provider.profiles.avatar_url} />
+                            <AvatarFallback className="text-lg">
+                              {business.provider.business_name?.[0] || business.provider.profiles.first_name[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-bold text-lg truncate">
+                                  {business.provider.business_name || 
+                                    `${business.provider.profiles.first_name} ${business.provider.profiles.last_name}`}
                                 </h3>
-                                {listing.service_providers.verification_status === 'approved' && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    Verified
+                                {business.provider.verification_status === 'approved' && (
+                                  <Badge variant="secondary" className="text-xs mt-1">
+                                    Verified Business
                                   </Badge>
                                 )}
                               </div>
-                              <p className="text-sm text-muted-foreground">{listing.title}</p>
                             </div>
+                            
+                            {/* Location */}
+                            {business.provider.profiles.location && (
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                                <MapPin className="h-3 w-3" />
+                                <span className="truncate">
+                                  {business.provider.profiles.location}
+                                  {business.distanceText && business.distanceText !== 'Distance unavailable' && 
+                                    ` • ${business.distanceText}`}
+                                </span>
+                              </div>
+                            )}
                           </div>
-                          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
-                            <Heart className="h-4 w-4" />
-                          </Button>
                         </div>
 
-                          {/* Category and Location */}
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Badge variant="outline" className="text-xs">
-                                {listing.service_categories.name}
-                              </Badge>
-                               {listing.service_providers.profiles.location && (
-                                 <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                                   <MapPin className="h-3 w-3" />
-                                   <span>
-                                     {listing.service_providers.profiles.location}
-                                     {listing.distanceText && listing.distanceText !== 'Distance unavailable' && ` • ${listing.distanceText}`}
-                                   </span>
-                                 </div>
-                               )}
+                        {/* Rating */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="flex">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`h-4 w-4 ${
+                                    star <= (business.provider.average_rating || 0)
+                                      ? 'fill-yellow-400 text-yellow-400'
+                                      : 'text-muted-foreground'
+                                  }`}
+                                />
+                              ))}
                             </div>
-                            <div className="flex items-center space-x-1">
-                              <div className="flex">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <Star
-                                    key={star}
-                                    className={`h-4 w-4 ${
-                                      star <= (listing.service_providers.average_rating || 0)
-                                        ? 'fill-yellow-400 text-yellow-400'
-                                        : 'text-muted-foreground'
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                              {listing.service_providers.total_reviews > 0 ? (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-xs text-primary hover:underline p-0 h-auto"
-                                   onClick={() => {
-                                     setSelectedReviews(reviews[listing.service_providers.id] || []);
-                                     setSelectedProviderName(`${listing.service_providers.profiles.first_name} ${listing.service_providers.profiles.last_name}`);
-                                     setIsReviewsModalOpen(true);
-                                   }}
-                                >
-                                  {listing.service_providers.total_reviews} Reviews
-                                </Button>
-                              ) : (
-                                <span className="text-xs text-muted-foreground">No reviews yet</span>
-                              )}
-                            </div>
+                            <span className="text-sm font-medium">
+                              {business.provider.average_rating?.toFixed(1) || '0.0'}
+                            </span>
                           </div>
+                          {business.provider.total_reviews > 0 && (
+                            <span className="text-xs text-muted-foreground">
+                              {business.provider.total_reviews} reviews
+                            </span>
+                          )}
+                        </div>
 
-                        {/* Skills */}
-                        {listing.service_providers.skills && (
+                        {/* Services Preview */}
+                        <div>
+                          <p className="text-sm font-medium mb-2">Services Offered:</p>
+                          <div className="space-y-1">
+                            {business.services.slice(0, 2).map((service: ServiceListing) => (
+                              <div key={service.id} className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground truncate flex-1">
+                                  • {service.title}
+                                </span>
+                                {service.price && (
+                                  <span className="font-medium text-primary ml-2">
+                                    R{service.price}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                            {business.services.length > 2 && (
+                              <p className="text-xs text-muted-foreground">
+                                +{business.services.length - 2} more services
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Skills Preview */}
+                        {business.provider.skills && business.provider.skills.length > 0 && (
                           <div className="flex flex-wrap gap-1">
-                            {listing.service_providers.skills.map((skill, index) => (
+                            {business.provider.skills.slice(0, 3).map((skill: string, index: number) => (
                               <Badge key={index} variant="outline" className="text-xs">
                                 {skill}
                               </Badge>
                             ))}
+                            {business.provider.skills.length > 3 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{business.provider.skills.length - 3}
+                              </Badge>
+                            )}
                           </div>
                         )}
 
-                        {/* Description */}
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {listing.description}
-                        </p>
-
-
-                        {/* Price and Actions */}
-                        <div className="flex items-center justify-between pt-2 border-t">
-                          <span className="font-semibold text-primary">
-                            {listing.price ? (
-                              `R${listing.price}${listing.price_type === 'hourly' ? '/hour' : 
-                                listing.price_type === 'daily' ? '/day' : ''}`
-                            ) : (
-                              'Price on request'
-                            )}
-                          </span>
-                          <div className="flex space-x-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => {
-                                setSelectedProvider(listing.service_providers);
-                                setIsChatModalOpen(true);
-                              }}
-                            >
-                              <MessageCircle className="h-4 w-4" />
-                            </Button>
-                            {listing.service_providers.profiles.phone_number && (
-                              <PhoneCallButton 
-                                phoneNumber={listing.service_providers.profiles.phone_number}
-                                size="sm"
-                              />
-                            )}
-                            <Button 
-                              size="sm" 
-                              className="bg-gradient-primary"
-                              onClick={() => {
-                                if (!user) {
-                                  navigate('/auth');
-                                  return;
-                                }
-                                setSelectedListing(listing);
-                                setIsBookingModalOpen(true);
-                              }}
-                            >
-                              Book Now
-                            </Button>
-                          </div>
+                        {/* CTA */}
+                        <div className="pt-2 border-t">
+                          <Button 
+                            className="w-full bg-gradient-primary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleBusinessClick(business);
+                            }}
+                          >
+                            View Business Details
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -641,6 +650,45 @@ const Search = () => {
           providerId={selectedProvider.id}
           providerName={`${selectedProvider.profiles.first_name} ${selectedProvider.profiles.last_name}`}
           providerAvatar={selectedProvider.profiles.avatar_url}
+        />
+      )}
+
+      {/* Business Detail Modal */}
+      {selectedBusiness && (
+        <BusinessDetailModal
+          isOpen={isBusinessDetailOpen}
+          onClose={() => {
+            setIsBusinessDetailOpen(false);
+            setSelectedBusiness(null);
+            setBusinessServices([]);
+          }}
+          business={selectedBusiness}
+          services={businessServices}
+          reviews={reviews[selectedBusiness.id] || []}
+          distance={businessServices[0]?.distanceText}
+          onBookService={(service) => {
+            if (!user) {
+              navigate('/auth');
+              return;
+            }
+            const fullListing = businessServices.find(s => s.id === service.id);
+            if (fullListing) {
+              setSelectedListing(fullListing);
+              setIsBookingModalOpen(true);
+              setIsBusinessDetailOpen(false);
+            }
+          }}
+          onMessage={() => {
+            setSelectedProvider(selectedBusiness);
+            setIsChatModalOpen(true);
+            setIsBusinessDetailOpen(false);
+          }}
+          onViewReviews={() => {
+            setSelectedReviews(reviews[selectedBusiness.id] || []);
+            setSelectedProviderName(selectedBusiness.business_name || 
+              `${selectedBusiness.profiles.first_name} ${selectedBusiness.profiles.last_name}`);
+            setIsReviewsModalOpen(true);
+          }}
         />
       )}
     </div>
