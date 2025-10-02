@@ -370,7 +370,7 @@ const Auth = () => {
               <div>
                 <CardTitle className="text-2xl">Welcome</CardTitle>
                 <CardDescription>
-                  Join thousands connecting with skilled professionals
+                  Connect with trusted local service businesses
                 </CardDescription>
               </div>
               
@@ -392,7 +392,7 @@ const Auth = () => {
                     onClick={() => setUserType("provider")}
                     className={userType === "provider" ? "bg-gradient-primary" : ""}
                   >
-                    Offer Services
+                    List My Business
                   </Button>
                 </div>
               </div>

@@ -57,16 +57,16 @@ const HeroSection = () => {
               </Badge>
               
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                Find{" "}
+                Find trusted{" "}
                 <span className="bg-gradient-primary bg-clip-text text-transparent">
-                  skilled talent
+                  local service companies
                 </span>{" "}
-                in your neighborhood
+                in your area
               </h1>
               
               <p className="text-lg text-muted-foreground max-w-md">
-                Connect with local service providers - from handymen to tutors, 
-                hairdressers to mechanics. Get quality work done by people you can trust.
+                Connect with small businesses offering professional services - from home repairs to tutoring, 
+                salons to automotive. Quality work from established local companies.
               </p>
             </div>
 
@@ -75,9 +75,9 @@ const HeroSection = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">What service do you need?</label>
+                  <label className="text-sm font-medium">What service do you need?</label>
                     <Input
-                      placeholder="e.g. Handyman, Tutor, Cleaner"
+                      placeholder="e.g. Home Repairs, Tutoring, Salon"
                       value={service}
                       onChange={(e) => setService(e.target.value)}
                       className="h-12"
@@ -146,8 +146,8 @@ const HeroSection = () => {
                   <span className="text-lg font-bold text-primary-foreground">5k+</span>
                 </div>
                 <div>
-                  <p className="font-semibold">Service Providers</p>
-                  <p className="text-sm text-muted-foreground">Ready to help</p>
+                  <p className="font-semibold">Local Businesses</p>
+                  <p className="text-sm text-muted-foreground">Ready to serve</p>
                 </div>
               </div>
             </div>

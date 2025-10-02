@@ -18,13 +18,13 @@ const Index = () => {
   const features = [
     {
       icon: Shield,
-      title: "Verified Professionals",
-      description: "All service providers are background checked and verified for your safety."
+      title: "Verified Businesses",
+      description: "All service companies are verified and reviewed for your peace of mind."
     },
     {
       icon: MapPin,
       title: "Local & Nearby",
-      description: "Find skilled professionals right in your neighborhood."
+      description: "Find established service companies right in your neighborhood."
     },
     {
       icon: Clock,
@@ -43,22 +43,22 @@ const Index = () => {
       name: "Sarah M.",
       location: "Cape Town",
       rating: 5,
-      text: "Found an amazing handyman through Skilled Nearby. Quick, professional, and affordable!",
-      service: "Handyman"
+      text: "Found a reliable home repairs company through Skilled Nearby. Professional team and fair pricing!",
+      service: "Home Repairs"
     },
     {
       name: "Michael R.",
       location: "Johannesburg", 
       rating: 5,
-      text: "The tutor I found helped my daughter improve her maths grades significantly.",
-      service: "Tutoring"
+      text: "The tutoring center I found has been excellent. My daughter's grades improved significantly.",
+      service: "Tutoring Center"
     },
     {
       name: "Priya K.",
       location: "Durban",
       rating: 5,
-      text: "Excellent hair stylist! She understood exactly what I wanted.",
-      service: "Hair Styling"
+      text: "Great salon! Finally found them online - they used to only advertise with posters.",
+      service: "Hair Salon"
     }
   ];
 
@@ -78,11 +78,11 @@ const Index = () => {
                 Why Choose Skilled Nearby?
               </Badge>
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Connect with trusted professionals
+                Connect with trusted local businesses
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                We make it easy to find reliable, skilled professionals in your area. 
-                From quick fixes to major projects, we've got you covered.
+                We bring small service companies online. Find established businesses in your area 
+                that previously only advertised through posters and word-of-mouth.
               </p>
             </div>
 
@@ -119,17 +119,17 @@ const Index = () => {
                 {
                   step: "1",
                   title: "Tell us what you need",
-                  description: "Describe your project and we'll match you with the right professionals"
+                  description: "Describe your project and we'll match you with the right local businesses"
                 },
                 {
                   step: "2", 
                   title: "Compare & choose",
-                  description: "Browse profiles, read reviews, and compare prices to find your perfect match"
+                  description: "Browse business profiles, read reviews, and compare services to find the best fit"
                 },
                 {
                   step: "3",
                   title: "Get it done",
-                  description: "Book your service and enjoy quality work from verified professionals"
+                  description: "Book your service and enjoy professional work from established local companies"
                 }
               ].map((step, index) => (
                 <div key={index} className="relative">
@@ -192,14 +192,14 @@ const Index = () => {
               Ready to get started?
             </h2>
             <p className="text-lg text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
-              Join thousands of South Africans who are already connecting with skilled professionals in their area.
+              Join thousands of South Africans connecting with trusted local service businesses online.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" variant="secondary" className="h-12 px-8" asChild>
                 <Link to="/search">Find Services</Link>
               </Button>
               <Button size="lg" variant="outline" className="h-12 px-8 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground hover:text-primary" asChild>
-                <Link to="/auth">Become a Provider</Link>
+                <Link to="/auth">List Your Business</Link>
               </Button>
             </div>
           </div>

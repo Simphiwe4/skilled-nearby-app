@@ -92,8 +92,8 @@ const ServiceProviderSetup = ({ onSetupComplete }: ServiceProviderSetupProps) =>
       if (error) throw error;
 
       toast({
-        title: "Profile Created!",
-        description: "Your service provider profile has been created and is pending verification.",
+        title: "Business Listed!",
+        description: "Your business profile has been created and is pending verification.",
       });
 
       onSetupComplete();
@@ -115,7 +115,7 @@ const ServiceProviderSetup = ({ onSetupComplete }: ServiceProviderSetupProps) =>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Briefcase className="h-5 w-5" />
-            <span>Complete Your Provider Profile</span>
+            <span>List Your Business Online</span>
           </CardTitle>
           <div className="flex space-x-2">
             {[1, 2, 3].map((stepNum) => (
@@ -135,20 +135,20 @@ const ServiceProviderSetup = ({ onSetupComplete }: ServiceProviderSetupProps) =>
               <h3 className="text-lg font-semibold">Business Information</h3>
               
               <div className="space-y-2">
-                <Label htmlFor="businessName">Business Name *</Label>
+                <Label htmlFor="businessName">Company/Business Name *</Label>
                 <Input
                   id="businessName"
-                  placeholder="e.g., John's Plumbing Services"
+                  placeholder="e.g., ABC Plumbing Services, Quick Fix Home Repairs"
                   value={formData.businessName}
                   onChange={(e) => setFormData(prev => ({ ...prev, businessName: e.target.value }))}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Service Description *</Label>
+                <Label htmlFor="description">Business Description *</Label>
                 <Textarea
                   id="description"
-                  placeholder="Describe your services and what makes you unique..."
+                  placeholder="Describe your company's services, team, and what makes you stand out..."
                   rows={4}
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -156,7 +156,7 @@ const ServiceProviderSetup = ({ onSetupComplete }: ServiceProviderSetupProps) =>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="experienceYears">Years of Experience</Label>
+                <Label htmlFor="experienceYears">Years in Business</Label>
                 <Input
                   id="experienceYears"
                   type="number"
@@ -173,7 +173,7 @@ const ServiceProviderSetup = ({ onSetupComplete }: ServiceProviderSetupProps) =>
               <h3 className="text-lg font-semibold">Pricing & Coverage</h3>
               
               <div className="space-y-2">
-                <Label htmlFor="hourlyRate">Hourly Rate (R)</Label>
+                <Label htmlFor="hourlyRate">Starting Rate (R/hour)</Label>
                 <Input
                   id="hourlyRate"
                   type="number"
@@ -206,13 +206,13 @@ const ServiceProviderSetup = ({ onSetupComplete }: ServiceProviderSetupProps) =>
 
           {step === 3 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Skills & Expertise</h3>
+              <h3 className="text-lg font-semibold">Services Offered</h3>
               
               <div className="space-y-2">
-                <Label>Add Skills</Label>
+                <Label>Add Services/Skills</Label>
                 <div className="flex space-x-2">
                   <Input
-                    placeholder="e.g., Plumbing, Electrical work"
+                    placeholder="e.g., Plumbing, Electrical work, Home repairs"
                     value={newSkill}
                     onChange={(e) => setNewSkill(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
@@ -225,7 +225,7 @@ const ServiceProviderSetup = ({ onSetupComplete }: ServiceProviderSetupProps) =>
 
               {formData.skills.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Your Skills</Label>
+                  <Label>Your Services</Label>
                   <div className="flex flex-wrap gap-2">
                     {formData.skills.map((skill) => (
                       <Badge key={skill} variant="secondary" className="pr-1">
