@@ -6,10 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { X, Plus, Briefcase, Star, Clock } from "lucide-react";
+import { X, Plus, Briefcase, Upload, Camera } from "lucide-react";
 
 interface ServiceProviderSetupProps {
   onSetupComplete: () => void;
@@ -29,6 +30,8 @@ const ServiceProviderSetup = ({ onSetupComplete }: ServiceProviderSetupProps) =>
     skills: [] as string[],
   });
   const [newSkill, setNewSkill] = useState('');
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const addSkill = () => {
     if (newSkill.trim() && !formData.skills.includes(newSkill.trim())) {
@@ -45,6 +48,18 @@ const ServiceProviderSetup = ({ onSetupComplete }: ServiceProviderSetupProps) =>
       ...prev,
       skills: prev.skills.filter(skill => skill !== skillToRemove)
     }));
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleNext = () => {
@@ -74,6 +89,41 @@ const ServiceProviderSetup = ({ onSetupComplete }: ServiceProviderSetupProps) =>
         .single();
 
       if (profileError) throw profileError;
+
+      // Upload avatar if provided
+      let avatarUrl = null;
+      if (avatarFile) {
+        const fileExt = avatarFile.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError, data } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, avatarFile, {
+            cacheControl: '3600',
+            upsert: true
+          });
+
+        if (uploadError) {
+          console.error('Avatar upload error:', uploadError);
+        } else {
+          const { data: { publicUrl } } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(fileName);
+          avatarUrl = publicUrl;
+        }
+      }
+
+      // Update profile with avatar URL if uploaded
+      if (avatarUrl) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ avatar_url: avatarUrl })
+          .eq('id', profile.id);
+
+        if (updateError) {
+          console.error('Error updating avatar:', updateError);
+        }
+      }
 
       // Create service provider profile
       const { error } = await supabase
@@ -134,6 +184,38 @@ const ServiceProviderSetup = ({ onSetupComplete }: ServiceProviderSetupProps) =>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Business Information</h3>
               
+              {/* Profile Picture Upload */}
+              <div className="space-y-2">
+                <Label>Business Logo / Profile Picture</Label>
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-24 w-24">
+                    <AvatarImage src={avatarPreview || undefined} />
+                    <AvatarFallback className="bg-muted">
+                      <Camera className="h-8 w-8 text-muted-foreground" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <Input
+                      id="avatar"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      className="hidden"
+                    />
+                    <Label
+                      htmlFor="avatar"
+                      className="cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Photo
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Recommended: Square image, at least 400x400px
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="businessName">Company/Business Name *</Label>
                 <Input
