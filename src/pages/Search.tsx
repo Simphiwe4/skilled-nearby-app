@@ -47,10 +47,15 @@ interface ServiceListing {
   service_providers: {
     id: string;
     business_name?: string;
+    description?: string;
     skills?: string[];
+    experience_years?: number;
     verification_status: string;
     average_rating: number;
     total_reviews: number;
+    hourly_rate?: number;
+    service_radius?: number;
+    portfolio_images?: string[];
     profiles: {
       first_name: string;
       last_name: string;
@@ -191,10 +196,15 @@ const Search = () => {
           service_providers!inner (
             id,
             business_name,
+            description,
             skills,
+            experience_years,
             verification_status,
             average_rating,
             total_reviews,
+            hourly_rate,
+            service_radius,
+            portfolio_images,
             profiles!inner (
               first_name,
               last_name,
@@ -485,7 +495,7 @@ const Search = () => {
                     className="hover:shadow-elevated transition-shadow cursor-pointer"
                     onClick={() => handleBusinessClick(business)}
                   >
-                    <CardContent className="p-6">
+                     <CardContent className="p-6">
                       <div className="space-y-4">
                         {/* Header */}
                         <div className="flex items-start gap-3">
@@ -523,6 +533,34 @@ const Search = () => {
                             )}
                           </div>
                         </div>
+
+                        {/* Business Info Row */}
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground border-y py-2">
+                          {business.provider.experience_years && (
+                            <div className="flex items-center gap-1">
+                              <span className="font-medium">{business.provider.experience_years} yrs</span>
+                              <span>experience</span>
+                            </div>
+                          )}
+                          {business.provider.hourly_rate && (
+                            <div className="flex items-center gap-1">
+                              <span className="font-medium text-primary">R{business.provider.hourly_rate}/hr</span>
+                            </div>
+                          )}
+                          {business.provider.service_radius && (
+                            <div className="flex items-center gap-1">
+                              <span>{business.provider.service_radius}km</span>
+                              <span>radius</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Description Preview */}
+                        {business.provider.description && (
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {business.provider.description}
+                          </p>
+                        )}
 
                         {/* Rating */}
                         <div className="flex items-center justify-between">

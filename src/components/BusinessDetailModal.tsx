@@ -40,6 +40,8 @@ interface BusinessDetailModalProps {
     average_rating: number;
     total_reviews: number;
     hourly_rate?: number;
+    service_radius?: number;
+    portfolio_images?: string[];
     profiles: {
       first_name: string;
       last_name: string;
@@ -157,7 +159,7 @@ const BusinessDetailModal = ({
           <Separator />
 
           {/* Business Info Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {business.experience_years && (
               <Card>
                 <CardContent className="p-4 flex items-center gap-3">
@@ -197,13 +199,28 @@ const BusinessDetailModal = ({
                 </div>
               </CardContent>
             </Card>
+
+            {business.service_radius && (
+              <Card>
+                <CardContent className="p-4 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <MapPin className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Service Area</p>
+                    <p className="font-semibold">{business.service_radius} km radius</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Tabs for Content */}
           <Tabs defaultValue="about" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="about">About</TabsTrigger>
               <TabsTrigger value="services">Services</TabsTrigger>
+              <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
               <TabsTrigger value="reviews">Reviews</TabsTrigger>
             </TabsList>
 
@@ -230,13 +247,50 @@ const BusinessDetailModal = ({
                 </div>
               )}
 
-              {/* Contact Person */}
-              <div>
-                <h3 className="font-semibold mb-2">Contact Person</h3>
-                <p className="text-muted-foreground">
-                  {business.profiles.first_name} {business.profiles.last_name}
-                </p>
+              {/* Contact Information */}
+              <div className="space-y-3">
+                <h3 className="font-semibold">Contact Information</h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Contact Person</p>
+                    <p className="font-medium">
+                      {business.profiles.first_name} {business.profiles.last_name}
+                    </p>
+                  </div>
+                  {business.profiles.phone_number && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Phone</p>
+                      <p className="font-medium">{business.profiles.phone_number}</p>
+                    </div>
+                  )}
+                  {business.profiles.location && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Location</p>
+                      <p className="font-medium">{business.profiles.location}</p>
+                    </div>
+                  )}
+                </div>
               </div>
+            </TabsContent>
+
+            <TabsContent value="portfolio" className="mt-4">
+              {business.portfolio_images && business.portfolio_images.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {business.portfolio_images.map((image, index) => (
+                    <div key={index} className="aspect-square rounded-lg overflow-hidden">
+                      <img 
+                        src={image} 
+                        alt={`Portfolio ${index + 1}`}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">
+                  No portfolio images available yet
+                </p>
+              )}
             </TabsContent>
 
             <TabsContent value="services" className="mt-4">
