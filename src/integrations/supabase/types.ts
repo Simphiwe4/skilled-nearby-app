@@ -425,7 +425,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_booking_relationship: {
+        Args: { target_profile_id: string; viewer_user_id: string }
+        Returns: boolean
+      }
+      has_message_relationship: {
+        Args: { target_profile_id: string; viewer_user_id: string }
+        Returns: boolean
+      }
+      is_approved_provider: { Args: { profile_id: string }; Returns: boolean }
     }
     Enums: {
       booking_status: "pending" | "confirmed" | "completed" | "cancelled"
